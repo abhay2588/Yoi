@@ -11,25 +11,25 @@ CHANNELS = [
     {
         "url": "https://www.youtube.com/@aajtak/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Aaj_Tak_logo.png",
+        "logo": "",
         "id": "aajtak"
     },
     {
         "url": "https://www.youtube.com/@abpnews/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/2/28/ABP_News_logo.png",
+        "logo": "",
         "id": "abpnews"
     },
     {
         "url": "https://www.youtube.com/@LofiGirl/live",
         "group": "Music",
-        "logo": "https://upload.wikimedia.org/wikipedia/en/2/28/Lofi_Girl_logo.jpg",
+        "logo": "",
         "id": "lofigirl"
     },
     {
         "url": "https://www.youtube.com/@zeenews/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/4/41/Zee_News_2022.svg",
+        "logo": "",
         "id": "zeenews"
     },
     {
@@ -53,7 +53,7 @@ CHANNELS = [
     {
         "url": "https://www.youtube.com/@news18india/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/3/30/News18_India_logo.svg",
+        "logo": "",
         "id": "news18india"
     },
     {
@@ -65,19 +65,19 @@ CHANNELS = [
     {
         "url": "https://www.youtube.com/@bharat24/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Bharat24express.png",
+        "logo": "",
         "id": "bharat24"
     },
     {
         "url": "https://www.youtube.com/@indiatv/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2b/India_TV_logo.svg",
+        "logo": "",
         "id": "indiatv"
     },
     {
         "url": "https://www.youtube.com/@bbchindi/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/f/ff/BBC_News.svg",
+        "logo": "",
         "id": "bbchindi"
     },
     {
@@ -89,9 +89,166 @@ CHANNELS = [
     {
         "url": "https://www.youtube.com/@republicbharat/live",
         "group": "News",
-        "logo": "https://upload.wikimedia.org/wikipedia/commons/0/07/Republic_Bharat_Logo.png",
+        "logo": "",
         "id": "republicbharat"
+    },
+    {
+        "url": "https://www.youtube.com/@news24/live",
+        "group": "News",
+        "logo": "",
+        "id": "news24"
+    }, 
+    {
+        "url": "https://www.youtube.com/@bharat24/live",
+        "group": "News",
+        "logo": "",
+        "id": "bharat24"
+    }, 
+    {
+        "url": "https://www.youtube.com/@TimesNow/live",
+        "group": "News",
+        "logo": "",
+        "id": "TimesNow"
+    }, 
+    {
+        "url": "https://www.youtube.com/@TheLallantop/live",
+        "group": "News",
+        "logo": "",
+        "id": "TheLallantop"
+    },  
+    {
+        "url": "https://www.youtube.com/@indiatoday/live",
+        "group": "News",
+        "logo": "",
+        "id": "indiatoday"
+    }, 
+    {
+        "url": "https://www.youtube.com/@ndtv/live",
+        "group": "News",
+        "logo": "",
+        "id": "ndtv"
+    },
+    {
+        "url": "https://www.youtube.com/@WION/live",
+        "group": "News",
+        "logo": "",
+        "id": "WION"
+    },
+    {
+        "url": "https://www.youtube.com/@RepublicWorld/live",
+        "group": "News",
+        "logo": "",
+        "id": "republicworld"
+    },
+    {
+        "url": "https://www.youtube.com/@cnnnews18/live",
+        "group": "News",
+        "logo": "",
+        "id": "cnnnews18"
+    },
+    {
+        "url": "https://www.youtube.com/@Firstpost/live",
+        "group": "News",
+        "logo": "",
+        "id": "Firstpost"
+    },
+    {
+        "url": "https://www.youtube.com/@SpongeBobOfficial/live",
+        "group": "Cartoons",
+        "logo": "",
+        "id": "spongebob"
+    },
+    {
+        "url": "https://www.youtube.com/@PeppaPigOfficial/live",
+        "group": "Cartoons",
+        "logo": "",
+        "id": "peppapig"
+    },
+    {
+        "url": "https://www.youtube.com/@WBKids/live",
+        "group": "Cartoons",
+        "logo": "",
+        "id": "wbkids"
+    },
+    {
+        "url": "https://www.youtube.com/@MashaBearEN/live",
+        "group": "Cartoons",
+        "logo": "",
+        "id": "mashabear"
+    },
+    {
+        "url": "https://www.youtube.com/@BoomerangUK/live",
+        "group": "Cartoons",
+        "logo": "",
+        "id": "tomandjerry"
+    },
+    {
+        "url": "https://www.youtube.com/@NASA/live",
+        "group": "Science & Space",
+        "logo": "",
+        "id": "nasa"
+    },
+    {
+        "url": "https://www.youtube.com/@liveiss/live",
+        "group": "Science & Space",
+        "logo": "",
+        "id": "isslive"
+    },
+    {
+        "url": "https://www.youtube.com/@SpaceX/live",
+        "group": "Science & Space",
+        "logo": "",
+        "id": "SpaceX"
+    },
+    {
+        "url": "https://www.youtube.com/@EuropeanSpaceAgency/live",
+        "group": "Science & Space",
+        "logo": "",
+        "id": "EuropeanSpaceAgency"
+    },
+    {
+        "url": "https://www.youtube.com/@ExploreAfrica/live",
+        "group": "Nature",
+        "logo": "",
+        "id": "exploreafrica"
+    },
+    {
+        "url": "https://www.youtube.com/@MontereyBayAquarium/live",
+        "group": "Nature",
+        "logo": "",
+        "id": "montereybay"
+    },
+    {
+        "url": "https://www.youtube.com/@earthcam/live",
+        "group": "Nature",
+        "logo": "",
+        "id": "earthcam"
+    },
+    {
+        "url": "https://www.youtube.com/@explorebears/live",
+        "group": "Nature",
+        "logo": "",
+        "id": "explorebears"
+    },
+    {   
+        "url": "https://www.youtube.com/@ExploreBirds/live",
+        "group": "Nature",
+        "logo": "",
+        "id": "ExploreBirds"
+    },
+    {  
+        "url": "https://www.youtube.com/@ExploreLiveNatureCams/live",
+        "group": "Nature",
+        "logo": "",
+        "id": "ExploreLiveNatureCams"
+    },
+    {
+        "url": "https://www.youtube.com/@ChillhopMusic/live",
+        "group": "Music",
+        "logo": "",
+        "id": "ChillhopMusic"
     }
+    
 ]
 
 def update_playlist():
