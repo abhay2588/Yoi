@@ -16,11 +16,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Installs Node.js to fix the JS runtime warning
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Install Deno, the default JS engine required by yt-dlp
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: '20'
+          deno-version: v2.x
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,14 +30,12 @@ jobs:
       - name: Install yt-dlp
         run: pip install yt-dlp
 
-      # Grabs your secure secret and creates the cookies.txt file for yt-dlp to read
       - name: Create Cookies File
         run: echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
 
       - name: Run the Python Script
         run: python update.py
 
-      # Clean up the cookies file so it doesn't accidentally get committed to your repo
       - name: Delete Cookies File
         run: rm cookies.txt
 
