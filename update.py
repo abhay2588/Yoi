@@ -5,9 +5,9 @@ OUTPUT_FILE = "live.m3u8"
 
 def get_stream_url():
     try:
-        # Added the --cookies flag to point to the file we will generate
+        # Added the remote-components flag to crack the new YouTube algorithm
         result = subprocess.run(
-            ["yt-dlp", "--cookies", "cookies.txt", "-g", YOUTUBE_URL],
+            ["yt-dlp", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-g", YOUTUBE_URL],
             capture_output=True,
             text=True,
             check=True
