@@ -1,14 +1,13 @@
 import subprocess
 
-# Put your YouTube Live URL here
 YOUTUBE_URL = "https://www.youtube.com/live/wEXiONQFddg"
 OUTPUT_FILE = "live.m3u8"
 
 def get_stream_url():
     try:
-        # Run yt-dlp to extract the direct m3u8 link
+        # Added the --cookies flag to point to the file we will generate
         result = subprocess.run(
-            ["yt-dlp", "-g", YOUTUBE_URL],
+            ["yt-dlp", "--cookies", "cookies.txt", "-g", YOUTUBE_URL],
             capture_output=True,
             text=True,
             check=True
