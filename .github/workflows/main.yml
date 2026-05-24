@@ -16,7 +16,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Install Deno, the default JS engine required by yt-dlp
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
@@ -27,8 +26,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install yt-dlp
-        run: pip install yt-dlp
+      # We added 'pip install requests' here so the script can fetch the Jokr playlist
+      - name: Install Dependencies
+        run: |
+          pip install yt-dlp
+          pip install requests
 
       - name: Create Cookies File
         run: echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
