@@ -1,34 +1,31 @@
-import requests
-import re
+import subprocess
 
-# Replace with your target channel
-YOUTUBE_URL = "https://www.youtube.com/@aajtak/live" 
+# Put your YouTube Live URL here
+YOUTUBE_URL = "https://www.youtube.com/live/wEXiONQFddg"
 OUTPUT_FILE = "live.m3u8"
 
-def get_m3u8():
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9"
-    }
-    
+def get_stream_url():
     try:
-        response = requests.get(YOUTUBE_URL, headers=headers)
-        response.raise_for_status()
+        # Run yt-dlp to extract the direct m3u8 link
+        result = subprocess.run(
+            ["yt-dlp", "-g", YOUTUBE_URL],
+            capture_output=True,
+            text=True,
+            check=True
+        )
         
-        match = re.search(r'"hlsManifestUrl":"(.*?)"', response.text)
-        if match:
-            m3u8_url = match.group(1).replace('\/', '/')
+        m3u8_url = result.stdout.strip()
+        
+        if m3u8_url:
             playlist_content = f"#EXTM3U\n#EXTINF:-1, Live Channel\n{m3u8_url}\n"
-            
             with open(OUTPUT_FILE, "w") as f:
                 f.write(playlist_content)
-                
-            print(f"Successfully updated {OUTPUT_FILE}")
+            print("Successfully extracted link and updated live.m3u8")
         else:
-            print("Could not find hlsManifestUrl. Make sure the channel is live.")
+            print("yt-dlp ran, but returned an empty string.")
             
-    except Exception as e:
-        print(f"Error fetching stream: {e}")
+    except subprocess.CalledProcessError as e:
+        print(f"yt-dlp failed with error: {e.stderr}")
 
 if __name__ == "__main__":
-    get_m3u8()
+    get_stream_url()
