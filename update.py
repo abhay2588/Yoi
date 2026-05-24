@@ -33,10 +33,34 @@ CHANNELS = [
         "id": "zeenews"
     },
     {
+        "url": "https://www.youtube.com/@timesnownavbharat/live",
+        "group": "News",
+        "logo": "",
+        "id": "timesnownavbharat"
+    },
+    {
+        "url": "https://www.youtube.com/@TV9Bharatvarsh/live",
+        "group": "News",
+        "logo": "",
+        "id": "TV9Bharatvarsh"
+    },
+    {
+        "url": "https://www.youtube.com/@ndtvindia/live",
+        "group": "News",
+        "logo": "",
+        "id": "ndtvindia"
+    },
+    {
         "url": "https://www.youtube.com/@news18india/live",
         "group": "News",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/3/30/News18_India_logo.svg",
         "id": "news18india"
+    },
+    {
+        "url": "https://www.youtube.com/@nmfnews/live",
+        "group": "News",
+        "logo": "",
+        "id": "nmfnews"
     },
     {
         "url": "https://www.youtube.com/@bharat24/live",
@@ -55,6 +79,12 @@ CHANNELS = [
         "group": "News",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/f/ff/BBC_News.svg",
         "id": "bbchindi"
+    },
+    {
+        "url": "https://www.youtube.com/@DDnews/live",
+        "group": "News",
+        "logo": "",
+        "id": "DDnews"
     },
     {
         "url": "https://www.youtube.com/@republicbharat/live",
