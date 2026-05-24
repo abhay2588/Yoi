@@ -11,7 +11,7 @@ YOUTUBE_URLS = [
     "https://www.youtube.com/@news18india/live",
     "https://www.youtube.com/@bharat24/live",
     "https://www.youtube.com/@indiatv/live",
-    "https://www.youtube.com/@bbcnewshindi/live",
+    "https://www.youtube.com/@bbchindi/live",
     "https://www.youtube.com/@republicbharat/live",
 ]
 
