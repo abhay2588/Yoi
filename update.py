@@ -1,6 +1,6 @@
 import subprocess
 
-YOUTUBE_URL = "https://www.youtube.com/live/wEXiONQFddg"
+YOUTUBE_URL = "https://www.youtube.com/@aajtak/live"
 OUTPUT_FILE = "live.m3u8"
 
 def get_stream_url():
