@@ -21,8 +21,8 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Requests Library
-        run: pip install requests
+      - name: Install yt-dlp
+        run: pip install yt-dlp
 
       - name: Run the Python Script
         run: python update.py
