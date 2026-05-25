@@ -49,6 +49,7 @@ jobs:
           # Assassinate the Xray background process so the runner can close
           pkill xray || true
           rm cookies.txt
+          
       - name: Run the Python Script
         env:
           PROXY_URL: "socks5://127.0.0.1:10808"
