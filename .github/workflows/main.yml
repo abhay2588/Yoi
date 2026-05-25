@@ -31,11 +31,16 @@ jobs:
           pip install yt-dlp
           pip install requests
 
+      # --- UPDATED: Safely writing the JSON without breaking quotes ---
       - name: Setup Xray Engine for Proxy
+        env:
+          # This pulls the JSON safely into the environment first
+          XRAY_CONFIG: ${{ secrets.VMESS_JSON_CONFIG }}
         run: |
           wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
           unzip Xray-linux-64.zip -d xray
-          echo "${{ secrets.VMESS_JSON_CONFIG }}" > xray/config.json
+          # This writes it to the file keeping all quotes intact
+          echo "$XRAY_CONFIG" > xray/config.json
           ./xray/xray run -c xray/config.json &
           sleep 5
 
