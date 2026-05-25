@@ -283,22 +283,21 @@ def update_playlist():
     for channel in CHANNELS:
         print(f"\nProcessing: {channel['url']}")
         try:
-            # Set up the base yt-dlp command
-            command = ["yt-dlp", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
+            # Added --socket-timeout to force yt-dlp to give up if the proxy is dead
+            command = ["yt-dlp", "--socket-timeout", "15", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
             
-            # If a proxy is active in the environment, attach it
             if PROXY:
                 command.extend(["--proxy", PROXY])
                 
-            # Add the specific channel URL to the end
             command.append(channel['url'])
 
-            # Run the command
+            # Added timeout=20 so Python aggressively stops the command if it hangs
             result = subprocess.run(
                 command,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
+                timeout=20
             )
             
             video_data = json.loads(result.stdout.strip())
@@ -308,7 +307,6 @@ def update_playlist():
             if m3u8_url:
                 playlist_content = f'#EXTINF:-1 tvg-id="{channel["id"]}" tvg-logo="{channel["logo"]}" group-title="{channel["group"]}", {channel_name}\n{m3u8_url}\n\n'
                 
-                # Append 'a' to add to the bottom of the Jokr list
                 with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
                     f.write(playlist_content)
                     
@@ -316,10 +314,10 @@ def update_playlist():
             else:
                 print(f"  -> Could not extract manifest for {channel['url']}.")
                 
+        # NEW: Catches the timeout and safely skips the channel!
+        except subprocess.TimeoutExpired:
+            print(f"  -> Proxy timed out for {channel['url']}. Skipping...")
         except subprocess.CalledProcessError:
             print(f"  -> Failed to process {channel['url']}. Skipping...")
         except json.JSONDecodeError:
             print(f"  -> Failed to parse JSON for {channel['url']}.")
-
-if __name__ == "__main__":
-    update_playlist()
