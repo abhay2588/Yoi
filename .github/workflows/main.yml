@@ -2,7 +2,7 @@ name: Auto-Update YouTube M3U8
 
 on:
   schedule:
-    - cron: "0 */5 * * *" 
+    - cron: "0 */6 * * *" 
   workflow_dispatch: 
 
 jobs:
@@ -36,8 +36,9 @@ jobs:
 
       - name: Run the Python Script
         env:
-          # This pulls your Webshare link directly from Secrets
           PROXY_URL: ${{ secrets.PROXY_URL }}
+          # Injects your new backup proxy
+          BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }}
         run: python update.py
 
       - name: Cleanup Cookies
