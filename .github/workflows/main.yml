@@ -31,32 +31,29 @@ jobs:
           pip install yt-dlp
           pip install requests
 
-      # --- UPDATED: Safely writing the JSON without breaking quotes ---
       - name: Setup Xray Engine for Proxy
         env:
-          # This pulls the JSON safely into the environment first
+          # Pulls the JSON safely into the environment first to protect quotes
           XRAY_CONFIG: ${{ secrets.VMESS_JSON_CONFIG }}
         run: |
           wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
           unzip Xray-linux-64.zip -d xray
-          # This writes it to the file keeping all quotes intact
           echo "$XRAY_CONFIG" > xray/config.json
           ./xray/xray run -c xray/config.json &
           sleep 5
 
-      - name: Cleanup (Kill Proxy and Cookies)
-        run: |
-          # Assassinate the Xray background process so the runner can close
-          pkill xray || true
-          rm cookies.txt
-          
+      - name: Create Cookies File
+        run: echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+
       - name: Run the Python Script
         env:
           PROXY_URL: "socks5://127.0.0.1:10808"
         run: python update.py
 
-      - name: Delete Cookies File
-        run: rm cookies.txt
+      - name: Cleanup (Kill Proxy and Cookies)
+        run: |
+          pkill xray || true
+          rm -f cookies.txt
 
       - name: Save and Push the New Token
         run: |
