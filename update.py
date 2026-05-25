@@ -1,10 +1,14 @@
 import subprocess
 import json
 import requests
+import os
 
 # The URL to your static Jokr playlist
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
+
+# Fetches the local proxy port established by Xray in the workflow
+PROXY = os.environ.get("PROXY_URL")
 
 # Your YouTube channels
 CHANNELS = [
@@ -279,8 +283,19 @@ def update_playlist():
     for channel in CHANNELS:
         print(f"\nProcessing: {channel['url']}")
         try:
+            # Set up the base yt-dlp command
+            command = ["yt-dlp", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
+            
+            # If a proxy is active in the environment, attach it
+            if PROXY:
+                command.extend(["--proxy", PROXY])
+                
+            # Add the specific channel URL to the end
+            command.append(channel['url'])
+
+            # Run the command
             result = subprocess.run(
-                ["yt-dlp", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J", channel['url']],
+                command,
                 capture_output=True,
                 text=True,
                 check=True
