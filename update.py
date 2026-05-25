@@ -111,28 +111,37 @@ def run_extractor(channel_url, proxy_to_use):
         timeout=20
     )
 
-# The worker function that processes a single channel with a fallback
+# The worker function that processes a single channel with Smart Routing
 def process_channel(channel):
     print(f"Started: {channel['url']}")
     
+    # ATTEMPT 1: Direct Connection (Uses GitHub's infinite free bandwidth)
     try:
-        # Attempt 1: Try with the Primary Proxy
-        result = run_extractor(channel['url'], PROXY)
+        result = run_extractor(channel['url'], None)
+    except Exception:
         
-    except Exception as e:
-        # Attempt 2: If Primary fails, instantly try the Backup
-        if BACKUP_PROXY:
-            print(f"  -> Primary timeout for {channel['id']}. Trying Backup Proxy...")
+        # ATTEMPT 2: Fallback to Webshare Proxy
+        print(f"  -> Direct blocked for {channel['id']}. Routing to Webshare...")
+        if PROXY:
             try:
-                result = run_extractor(channel['url'], BACKUP_PROXY)
-            except Exception as backup_e:
-                print(f"  -> Backup also failed: {channel['url']}")
-                return None
+                result = run_extractor(channel['url'], PROXY)
+            except Exception:
+                
+                # ATTEMPT 3: Fallback to Backup Proxy (If you added one)
+                if BACKUP_PROXY:
+                    print(f"  -> Primary proxy failed for {channel['id']}. Trying Backup...")
+                    try:
+                        result = run_extractor(channel['url'], BACKUP_PROXY)
+                    except Exception:
+                        print(f"  -> All routes failed: {channel['url']}")
+                        return None
+                else:
+                    print(f"  -> Webshare failed: {channel['url']}")
+                    return None
         else:
-            print(f"  -> Failed: {channel['url']}")
             return None
 
-    # If either proxy succeeded, process the JSON data
+    # If any of the 3 routes succeeded, process the JSON data
     try:
         video_data = json.loads(result.stdout.strip())
         channel_name = video_data.get("uploader", "Unknown Channel")
@@ -148,42 +157,3 @@ def process_channel(channel):
     except json.JSONDecodeError:
         print(f"  -> Failed to parse JSON for {channel['url']}.")
         return None
-
-def update_playlist():
-    print(f"Fetching base playlist from {JOKR_PLAYLIST_URL}...")
-    
-    try:
-        response = requests.get(JOKR_PLAYLIST_URL)
-        response.raise_for_status()
-        base_content = response.text
-    except Exception as e:
-        print(f"Failed to fetch Jokr playlist: {e}")
-        base_content = "#EXTM3U\n\n"
-
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        if not base_content.strip().startswith("#EXTM3U"):
-            f.write("#EXTM3U\n\n")
-        f.write(base_content)
-        if not base_content.endswith("\n"):
-            f.write("\n\n")
-    
-    print("Base playlist saved. Spawning multi-thread extractors...")
-
-    extracted_links = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        results = executor.map(process_channel, CHANNELS)
-        
-        for res in results:
-            if res:
-                extracted_links.append(res)
-
-    print("Extraction complete. Writing to file...")
-    
-    with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
-        for link in extracted_links:
-            f.write(link)
-            
-    print("Playlist updated successfully!")
-
-if __name__ == "__main__":
-    update_playlist()
