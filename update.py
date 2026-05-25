@@ -14,7 +14,6 @@ BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL")
 
 # Your YouTube channels
 CHANNELS = [
-CHANNELS = [
     # --- NEWS (HINDI & REGIONAL) ---
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
     {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"},
