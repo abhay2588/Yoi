@@ -58,7 +58,7 @@ CHANNELS = [
 def process_channel(channel):
     print(f"Started: {channel['url']}")
     try:
-        command = ["yt-dlp", "--socket-timeout", "15", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
+        command = ["yt-dlp", "--socket-timeout", "45", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
         
         if PROXY:
             command.extend(["--proxy", PROXY])
@@ -70,7 +70,7 @@ def process_channel(channel):
             capture_output=True,
             text=True,
             check=True,
-            timeout=20
+            timeout=60
         )
         
         video_data = json.loads(result.stdout.strip())
