@@ -2,6 +2,7 @@ import subprocess
 import json
 import requests
 import os
+import concurrent.futures
 
 # The URL to your static Jokr playlist
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
@@ -53,6 +54,43 @@ CHANNELS = [
     {"url": "https://www.youtube.com/@ChillhopMusic/live", "group": "Music", "logo": "", "id": "ChillhopMusic"}
 ]
 
+# This is the worker function that processes a single channel
+def process_channel(channel):
+    print(f"Started: {channel['url']}")
+    try:
+        command = ["yt-dlp", "--socket-timeout", "15", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
+        
+        if PROXY:
+            command.extend(["--proxy", PROXY])
+            
+        command.append(channel['url'])
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=20
+        )
+        
+        video_data = json.loads(result.stdout.strip())
+        channel_name = video_data.get("uploader", "Unknown Channel")
+        m3u8_url = video_data.get("manifest_url") or video_data.get("url")
+        
+        if m3u8_url:
+            print(f"  -> Success: {channel_name}")
+            return f'#EXTINF:-1 tvg-id="{channel["id"]}" tvg-logo="{channel["logo"]}" group-title="{channel["group"]}", {channel_name}\n{m3u8_url}\n\n'
+        else:
+            print(f"  -> No manifest: {channel['url']}")
+            return None
+            
+    except subprocess.TimeoutExpired:
+        print(f"  -> Timeout: {channel['url']}")
+        return None
+    except Exception as e:
+        print(f"  -> Failed: {channel['url']}")
+        return None
+
 def update_playlist():
     print(f"Fetching base playlist from {JOKR_PLAYLIST_URL}...")
     
@@ -71,49 +109,25 @@ def update_playlist():
         if not base_content.endswith("\n"):
             f.write("\n\n")
     
-    print("Base playlist saved. Now extracting YouTube links...")
+    print("Base playlist saved. Spawning multi-thread extractors...")
 
-    for channel in CHANNELS:
-        print(f"\nProcessing: {channel['url']}")
-        try:
-            # 15-second socket timeout so dead proxies don't hang the runner
-            command = ["yt-dlp", "--socket-timeout", "15", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
-            
-            if PROXY:
-                command.extend(["--proxy", PROXY])
-                
-            command.append(channel['url'])
+    # Here is the magic: We run up to 10 channels concurrently
+    extracted_links = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # executor.map keeps the channels in the exact order of your list
+        results = executor.map(process_channel, CHANNELS)
+        
+        for res in results:
+            if res:
+                extracted_links.append(res)
 
-            # 20-second hard kill timeout for the Python process
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=20
-            )
+    print("Extraction complete. Writing to file...")
+    
+    with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
+        for link in extracted_links:
+            f.write(link)
             
-            video_data = json.loads(result.stdout.strip())
-            channel_name = video_data.get("uploader", "Unknown Channel")
-            m3u8_url = video_data.get("manifest_url") or video_data.get("url")
-            
-            if m3u8_url:
-                playlist_content = f'#EXTINF:-1 tvg-id="{channel["id"]}" tvg-logo="{channel["logo"]}" group-title="{channel["group"]}", {channel_name}\n{m3u8_url}\n\n'
-                
-                with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
-                    f.write(playlist_content)
-                    
-                print(f"  -> Successfully added {channel_name}")
-            else:
-                print(f"  -> Could not extract manifest for {channel['url']}.")
-                
-        except subprocess.TimeoutExpired:
-            print(f"  -> Proxy timed out for {channel['url']}. Skipping...")
-        except subprocess.CalledProcessError:
-            print(f"  -> Failed to process {channel['url']}. Skipping...")
-        except json.JSONDecodeError:
-            print(f"  -> Failed to parse JSON for {channel['url']}.")
+    print("Playlist updated successfully!")
 
-# THIS IS THE TRIGGER THAT WAS MISSING!
 if __name__ == "__main__":
     update_playlist()
