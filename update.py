@@ -9,8 +9,9 @@ JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
 # Fetches proxies from your GitHub Action environment
-PROXY = os.environ.get("PROXY_URL") # This is your VMESS
-BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # This is your Webshare
+BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # 1. Webshare
+PROXY = os.environ.get("PROXY_URL")               # 2. Indian VMESS
+WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # 3. Cloudflare WARP
 
 # Your YouTube channels
 CHANNELS = [
@@ -73,78 +74,68 @@ CHANNELS = [
     {"url": "https://www.youtube.com/@ChillhopMusic/live", "group": "Music", "logo": "", "id": "ChillhopMusic"}
 ]
 
-# Helper function to build and run the yt-dlp command
 def run_extractor(channel_url, proxy_to_use):
     command = ["yt-dlp", "--socket-timeout", "15", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
-    
     if proxy_to_use:
         command.extend(["--proxy", proxy_to_use])
-        
     command.append(channel_url)
+    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
 
-    return subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        check=True,
-        timeout=20
-    )
-
-# The worker function with Smart Routing & Direct Bypass
 def process_channel(channel):
     print(f"Started: {channel['url']}")
     result = None
     
-    # --- NEW: DIRECT BYPASS FOR GLOBAL CHANNELS ---
+    # --- DIRECT BYPASS FOR GLOBAL CHANNELS ---
     if channel['group'] in ["Cartoons", "Science & Space", "Music"]:
-        print(f"  -> Global channel detected. Attempting Direct GitHub Connection first...")
+        print(f"  -> Global channel detected. Attempting Direct GitHub Connection...")
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
             print(f"  -> Direct failed for {channel['id']}. Falling back to proxy pipeline...")
 
-    # --- STANDARD ROUTE: Primary Proxy (Webshare) ---
+    # --- LAYER 1: WEBSHARE ---
     if not result and BACKUP_PROXY:
         try:
             result = run_extractor(channel['url'], BACKUP_PROXY)
         except Exception:
-            print(f"  -> Webshare blocked/failed for {channel['id']}. Routing to VMESS...")
+            print(f"  -> Webshare failed/blocked for {channel['id']}. Routing to VMESS...")
             
-    # --- STANDARD ROUTE: Fallback Proxy (Indian VMESS Node) ---
+    # --- LAYER 2: INDIAN VMESS NODE ---
     if not result and PROXY:
         try:
             result = run_extractor(channel['url'], PROXY)
         except Exception:
-            print(f"  -> VMESS failed for {channel['id']}. Trying Direct connection...")
+            print(f"  -> VMESS failed for {channel['id']}. Routing to Cloudflare WARP...")
+
+    # --- LAYER 3: CLOUDFLARE WARP ---
+    if not result and WARP_PROXY:
+        try:
+            result = run_extractor(channel['url'], WARP_PROXY)
+        except Exception:
+            print(f"  -> WARP failed for {channel['id']}. Trying Direct connection as last resort...")
             
-    # --- FINAL CATCH-ALL: Direct Connection ---
+    # --- LAYER 4: FINAL CATCH-ALL (Direct) ---
     if not result:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
-            print(f"  -> FATAL: All routes (Webshare, VMESS, Direct) failed: {channel['url']}")
+            print(f"  -> FATAL: All 4 routes failed for: {channel['url']}")
             return None
 
-    # If any of the routes succeeded, process the JSON data
     try:
         video_data = json.loads(result.stdout.strip())
         channel_name = video_data.get("uploader", "Unknown Channel")
         m3u8_url = video_data.get("manifest_url") or video_data.get("url")
-        
         if m3u8_url:
             print(f"  -> Success: {channel_name}")
             return f'#EXTINF:-1 tvg-id="{channel["id"]}" tvg-logo="{channel["logo"]}" group-title="{channel["group"]}", {channel_name}\n{m3u8_url}\n\n'
         else:
-            print(f"  -> No manifest: {channel['url']}")
             return None
-            
     except json.JSONDecodeError:
-        print(f"  -> Failed to parse JSON for {channel['url']}.")
         return None
 
 def update_playlist():
     print(f"Fetching base playlist from {JOKR_PLAYLIST_URL}...")
-    
     try:
         response = requests.get(JOKR_PLAYLIST_URL)
         response.raise_for_status()
@@ -165,19 +156,15 @@ def update_playlist():
     extracted_links = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         results = executor.map(process_channel, CHANNELS)
-        
         for res in results:
             if res:
                 extracted_links.append(res)
 
     print("Extraction complete. Writing to file...")
-    
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         for link in extracted_links:
             f.write(link)
-            
     print("Playlist updated successfully!")
 
-# THE TRIGGER!
 if __name__ == "__main__":
     update_playlist()            
