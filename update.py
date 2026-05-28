@@ -9,8 +9,8 @@ JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
 # Fetches proxies from your GitHub Action environment
-PROXY = os.environ.get("PROXY_URL")               # Now Layer 1: Indian VMESS
-BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # Now Layer 2: Webshare
+PROXY = os.environ.get("PROXY_URL")               # Layer 1: Indian VMESS
+BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # Layer 2: Webshare (Restored!)
 WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # Layer 3: Cloudflare WARP
 
 # Your YouTube channels
@@ -75,47 +75,44 @@ CHANNELS = [
 ]
 
 def run_extractor(channel_url, proxy_to_use):
-    command = ["yt-dlp", "--socket-timeout", "15", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
+    # TIMEOUT DROPPED TO 7 SECONDS FOR BLAZING FAST FALLBACKS
+    command = ["yt-dlp", "--socket-timeout", "7", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
     if proxy_to_use:
         command.extend(["--proxy", proxy_to_use])
     command.append(channel_url)
-    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
+    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=12)
 
 def process_channel(channel):
     print(f"Started: {channel['url']}")
     result = None
     
     # --- DIRECT BYPASS FOR GLOBAL CHANNELS ---
-    # Zero bandwidth cost to your proxies
     if channel['group'] in ["Cartoons", "Science & Space", "Music"]:
-        print(f"  -> Global channel detected. Attempting Direct GitHub Connection...")
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
             print(f"  -> Direct failed for {channel['id']}. Falling back to proxy pipeline...")
 
     # --- LAYER 1: INDIAN VMESS NODE ---
-    # Free, unlimited bandwidth meat shield
     if not result and PROXY:
         try:
             result = run_extractor(channel['url'], PROXY)
         except Exception:
-            print(f"  -> VMESS failed/blocked for {channel['id']}. Routing to Webshare...")
-            
-    # --- LAYER 2: WEBSHARE ---
-    # Fast, but capped data. Only triggers if VMESS fails.
+            print(f"  -> VMESS failed for {channel['id']}. Routing to Webshare...")
+
+    # --- LAYER 2: WEBSHARE (RESTORED) ---
     if not result and BACKUP_PROXY:
         try:
             result = run_extractor(channel['url'], BACKUP_PROXY)
         except Exception:
             print(f"  -> Webshare failed for {channel['id']}. Routing to Cloudflare WARP...")
-
+            
     # --- LAYER 3: CLOUDFLARE WARP ---
     if not result and WARP_PROXY:
         try:
             result = run_extractor(channel['url'], WARP_PROXY)
         except Exception:
-            print(f"  -> WARP failed for {channel['id']}. Trying Direct connection as last resort...")
+            print(f"  -> WARP failed for {channel['id']}. Trying Direct as last resort...")
             
     # --- LAYER 4: FINAL CATCH-ALL (Direct) ---
     if not result:
@@ -157,7 +154,8 @@ def update_playlist():
     print("Base playlist saved. Spawning multi-thread extractors...")
 
     extracted_links = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    # BUMPED TO 20 WORKERS FOR FASTER MULTIFETCH
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
             if res:
