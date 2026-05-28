@@ -90,34 +90,42 @@ def run_extractor(channel_url, proxy_to_use):
         timeout=20
     )
 
-# The worker function with Smart Routing
+# The worker function with Smart Routing & Direct Bypass
 def process_channel(channel):
     print(f"Started: {channel['url']}")
     result = None
     
-    # ATTEMPT 1: Primary Proxy (Webshare)
-    if BACKUP_PROXY:
+    # --- NEW: DIRECT BYPASS FOR GLOBAL CHANNELS ---
+    if channel['group'] in ["Cartoons", "Science & Space", "Music"]:
+        print(f"  -> Global channel detected. Attempting Direct GitHub Connection first...")
+        try:
+            result = run_extractor(channel['url'], None)
+        except Exception:
+            print(f"  -> Direct failed for {channel['id']}. Falling back to proxy pipeline...")
+
+    # --- STANDARD ROUTE: Primary Proxy (Webshare) ---
+    if not result and BACKUP_PROXY:
         try:
             result = run_extractor(channel['url'], BACKUP_PROXY)
         except Exception:
             print(f"  -> Webshare blocked/failed for {channel['id']}. Routing to VMESS...")
             
-    # ATTEMPT 2: Fallback Proxy (Indian VMESS Node)
+    # --- STANDARD ROUTE: Fallback Proxy (Indian VMESS Node) ---
     if not result and PROXY:
         try:
             result = run_extractor(channel['url'], PROXY)
         except Exception:
             print(f"  -> VMESS failed for {channel['id']}. Trying Direct connection...")
             
-    # ATTEMPT 3: Direct Connection (GitHub's Azure IP)
+    # --- FINAL CATCH-ALL: Direct Connection ---
     if not result:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
-            print(f"  -> All routes (Webshare, VMESS, Direct) failed: {channel['url']}")
+            print(f"  -> FATAL: All routes (Webshare, VMESS, Direct) failed: {channel['url']}")
             return None
 
-    # If any of the 3 routes succeeded, process the JSON data
+    # If any of the routes succeeded, process the JSON data
     try:
         video_data = json.loads(result.stdout.strip())
         channel_name = video_data.get("uploader", "Unknown Channel")
