@@ -9,8 +9,8 @@ JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
 # Fetches proxies from your GitHub Action environment
-PROXY = os.environ.get("PROXY_URL")
-BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL")
+PROXY = os.environ.get("PROXY_URL") # This is your VMESS
+BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # This is your Webshare
 
 # Your YouTube channels
 CHANNELS = [
@@ -95,26 +95,26 @@ def process_channel(channel):
     print(f"Started: {channel['url']}")
     result = None
     
-    # ATTEMPT 1: Primary Proxy (Indian VMESS Node)
-    if PROXY:
-        try:
-            result = run_extractor(channel['url'], PROXY)
-        except Exception:
-            print(f"  -> VMESS blocked/failed for {channel['id']}. Routing to Webshare...")
-            
-    # ATTEMPT 2: Fallback Proxy (Webshare)
-    if not result and BACKUP_PROXY:
+    # ATTEMPT 1: Primary Proxy (Webshare)
+    if BACKUP_PROXY:
         try:
             result = run_extractor(channel['url'], BACKUP_PROXY)
         except Exception:
-            print(f"  -> Webshare failed for {channel['id']}. Trying Direct connection...")
+            print(f"  -> Webshare blocked/failed for {channel['id']}. Routing to VMESS...")
+            
+    # ATTEMPT 2: Fallback Proxy (Indian VMESS Node)
+    if not result and PROXY:
+        try:
+            result = run_extractor(channel['url'], PROXY)
+        except Exception:
+            print(f"  -> VMESS failed for {channel['id']}. Trying Direct connection...")
             
     # ATTEMPT 3: Direct Connection (GitHub's Azure IP)
     if not result:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
-            print(f"  -> All routes (VMESS, Webshare, Direct) failed: {channel['url']}")
+            print(f"  -> All routes (Webshare, VMESS, Direct) failed: {channel['url']}")
             return None
 
     # If any of the 3 routes succeeded, process the JSON data
