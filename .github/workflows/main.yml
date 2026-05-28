@@ -1,101 +1,46 @@
-name: Auto-Update YouTube M3U8
+name: Yoi Auto Update
 
 on:
   schedule:
-    - cron: "0 */8 * * *" 
-  workflow_dispatch: 
+    # The 6-hour sweet spot: Matches YouTube's token expiry to keep streams alive
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # Allows you to manually click "Run workflow" for instant testing
 
 jobs:
-  update-stream:
+  update-playlist:
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write 
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      # --- THE GHOST PROTOCOL: BOOTING TOR ---
+      - name: Install and Start Tor
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tor
+          sudo service tor start
+          echo "Waiting 15 seconds for Tor to establish a secure circuit..."
+          sleep 15
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install Dependencies
         run: |
-          pip install yt-dlp
-          pip install requests
+          python -m pip install --upgrade pip
+          pip install yt-dlp requests
 
-      - name: Create Cookies File
-        run: echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
-
-      - name: Boot Indian VMESS Node
-        env:
-          VMESS_LINK: ${{ secrets.INDIAN_VMESS_LINK }}
-        run: |
-          wget -qO xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-          unzip -q xray.zip -d xray-core
-          chmod +x xray-core/xray
-          
-          cat << 'EOF' > build_config.py
-          import os, json, base64, re
-          link = os.environ.get('VMESS_LINK', '').replace('vmess://', '')
-          if not link: exit(0)
-          
-          link = re.sub(r'\s+', '', link)
-          link += '=' * (-len(link) % 4)
-          v = json.loads(base64.b64decode(link).decode('utf-8'))
-          
-          config = {
-              'inbounds': [{'port': 10808, 'listen': '127.0.0.1', 'protocol': 'socks', 'settings': {'udp': True}}],
-              'outbounds': [{'protocol': 'vmess', 'settings': {'vnext': [{'address': v.get('add'), 'port': int(v.get('port')), 'users': [{'id': v.get('id'), 'alterId': int(v.get('aid', 0))}]}]}, 'streamSettings': {'network': v.get('net', 'tcp'), 'security': v.get('tls', 'none')}}]
-          }
-          
-          if v.get('net') == 'ws':
-              config['outbounds'][0]['streamSettings']['wsSettings'] = {'path': v.get('path', '/'), 'headers': {'Host': v.get('host', '')}}
-              
-          with open('config.json', 'w') as f: json.dump(config, f)
-          EOF
-          
-          python build_config.py
-          
-          if [ -f config.json ]; then
-            timeout 120s ./xray-core/xray run -c config.json &
-            sleep 5
-            echo "Indian VMESS Node booted on 127.0.0.1:10808"
-          fi
-
-      - name: Boot Cloudflare WARP Node
-        run: |
-          curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
-          sudo apt-get update
-          sudo apt-get install -y cloudflare-warp
-          warp-cli --accept-tos registration new
-          warp-cli --accept-tos mode proxy
-          warp-cli --accept-tos proxy port 40000
-          warp-cli --accept-tos connect
-          sleep 5
-          echo "Cloudflare WARP Node booted on 127.0.0.1:40000"
-
-      - name: Run Extraction Script
-        env:
-          BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }}
-          PROXY_URL: "socks5://127.0.0.1:10808"
-          WARP_PROXY_URL: "socks5://127.0.0.1:40000"
+      - name: Run Smart Extraction Script
         run: python update.py
 
-      - name: Cleanup Cookies
-        run: rm -f cookies.txt
-
-      - name: Save and Push the New Token
+      - name: Commit and Push Changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add live.m3u8
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Refresh streams (4-Layer Proxy Engine)" && git push)
+          # The || exit 0 prevents the workflow from failing if no links changed
+          git commit -m "Auto-update channels via Tor Network" || exit 0
+          git push
