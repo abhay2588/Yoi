@@ -33,15 +33,24 @@ jobs:
           unzip -q xray.zip -d xray-core
           chmod +x xray-core/xray
           
-          # 2. Safely write Python script to a file
+          # 2. Safely write Python script to a file (Now with aggressive string cleaning)
           cat << 'EOF' > build_config.py
-          import os, json, base64
+          import os, json, base64, re
+          
+          # Grab the link and remove the vmess:// prefix
           link = os.environ.get('VMESS_LINK', '').replace('vmess://', '')
           if not link: exit(0)
           
+          # RUTHLESSLY strip all hidden spaces, tabs, and newlines
+          link = re.sub(r'\s+', '', link)
+          
+          # Fix base64 padding
           link += '=' * (-len(link) % 4)
+          
+          # Decode the payload
           v = json.loads(base64.b64decode(link).decode('utf-8'))
           
+          # Build the configuration file
           config = {
               'inbounds': [{'port': 10808, 'listen': '127.0.0.1', 'protocol': 'socks', 'settings': {'udp': True}}],
               'outbounds': [{'protocol': 'vmess', 'settings': {'vnext': [{'address': v.get('add'), 'port': int(v.get('port')), 'users': [{'id': v.get('id'), 'alterId': int(v.get('aid', 0))}]}]}, 'streamSettings': {'network': v.get('net', 'tcp'), 'security': v.get('tls', 'none')}}]
