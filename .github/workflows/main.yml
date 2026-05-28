@@ -2,19 +2,26 @@ name: Auto-Update YouTube M3U8
 
 on:
   schedule:
-    - cron: "0 */4 * * *"
-  workflow_dispatch:
+    - cron: "0 */4 * * *" 
+  workflow_dispatch: 
 
 jobs:
   update-stream:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write 
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Python
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -24,33 +31,26 @@ jobs:
           pip install yt-dlp
           pip install requests
 
-      - name: Boot Indian VMESS Node (With Kill Switch)
+      - name: Create Cookies File
+        run: echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+
+      - name: Boot Indian VMESS Node
         env:
           VMESS_LINK: ${{ secrets.INDIAN_VMESS_LINK }}
         run: |
-          # 1. Download Xray-core
           wget -qO xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
           unzip -q xray.zip -d xray-core
           chmod +x xray-core/xray
           
-          # 2. Safely write Python script to a file (Now with aggressive string cleaning)
           cat << 'EOF' > build_config.py
           import os, json, base64, re
-          
-          # Grab the link and remove the vmess:// prefix
           link = os.environ.get('VMESS_LINK', '').replace('vmess://', '')
           if not link: exit(0)
           
-          # RUTHLESSLY strip all hidden spaces, tabs, and newlines
           link = re.sub(r'\s+', '', link)
-          
-          # Fix base64 padding
           link += '=' * (-len(link) % 4)
-          
-          # Decode the payload
           v = json.loads(base64.b64decode(link).decode('utf-8'))
           
-          # Build the configuration file
           config = {
               'inbounds': [{'port': 10808, 'listen': '127.0.0.1', 'protocol': 'socks', 'settings': {'udp': True}}],
               'outbounds': [{'protocol': 'vmess', 'settings': {'vnext': [{'address': v.get('add'), 'port': int(v.get('port')), 'users': [{'id': v.get('id'), 'alterId': int(v.get('aid', 0))}]}]}, 'streamSettings': {'network': v.get('net', 'tcp'), 'security': v.get('tls', 'none')}}]
@@ -62,27 +62,40 @@ jobs:
           with open('config.json', 'w') as f: json.dump(config, f)
           EOF
           
-          # Run the script we just safely built
           python build_config.py
           
-          # 3. Start the Engine with the 120-second Kill Switch
           if [ -f config.json ]; then
             timeout 120s ./xray-core/xray run -c config.json &
             sleep 5
-            echo "Indian VMESS Node successfully booted on 127.0.0.1:10808"
-          else
-            echo "Failed to generate config. Continuing without VMESS."
+            echo "Indian VMESS Node booted on 127.0.0.1:10808"
           fi
+
+      - name: Boot Cloudflare WARP Node
+        run: |
+          curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+          sudo apt-get update
+          sudo apt-get install -y cloudflare-warp
+          warp-cli --accept-tos registration new
+          warp-cli --accept-tos mode proxy
+          warp-cli --accept-tos proxy port 40000
+          warp-cli --accept-tos connect
+          sleep 5
+          echo "Cloudflare WARP Node booted on 127.0.0.1:40000"
 
       - name: Run Extraction Script
         env:
-          PROXY_URL: "socks5://127.0.0.1:10808"
           BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }}
+          PROXY_URL: "socks5://127.0.0.1:10808"
+          WARP_PROXY_URL: "socks5://127.0.0.1:40000"
         run: python update.py
 
-      - name: Commit and Push Changes
+      - name: Cleanup Cookies
+        run: rm -f cookies.txt
+
+      - name: Save and Push the New Token
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add live.m3u8
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Refresh stream token via VMESS" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Refresh streams (4-Layer Proxy Engine)" && git push)
