@@ -2,9 +2,9 @@ name: Yoi Auto Update
 
 on:
   schedule:
-    # The 6-hour sweet spot: Matches YouTube's token expiry to keep streams alive
-    - cron: "0 */6 * * *"
-  workflow_dispatch: # Allows you to manually click "Run workflow" for instant testing
+    # Runs every 6 hours (4 times a day) to balance YouTube expiry and Webshare data
+    - cron: "0 */8 * * *"
+  workflow_dispatch: # Allows manual triggering from the Actions tab
 
 jobs:
   update-playlist:
@@ -13,15 +13,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
-      # --- THE GHOST PROTOCOL: BOOTING TOR ---
-      - name: Install and Start Tor
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y tor
-          sudo service tor start
-          echo "Waiting 15 seconds for Tor to establish a secure circuit..."
-          sleep 15
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -33,7 +24,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install yt-dlp requests
 
+      - name: Create Cookies File
+        run: |
+          echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+
       - name: Run Smart Extraction Script
+        env:
+          # Injects your Webshare proxy securely into the Python script
+          BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }}
         run: python update.py
 
       - name: Commit and Push Changes
@@ -41,6 +39,6 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add live.m3u8
-          # The || exit 0 prevents the workflow from failing if no links changed
-          git commit -m "Auto-update channels via Tor Network" || exit 0
+          # The || exit 0 prevents workflow failure if cache caught everything and no links changed
+          git commit -m "Auto-update channels via Webshare Smart Cache" || exit 0
           git push
