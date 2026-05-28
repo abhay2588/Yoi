@@ -9,9 +9,9 @@ JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
 # Fetches proxies from your GitHub Action environment
-BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # 1. Webshare
-PROXY = os.environ.get("PROXY_URL")               # 2. Indian VMESS
-WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # 3. Cloudflare WARP
+PROXY = os.environ.get("PROXY_URL")               # Now Layer 1: Indian VMESS
+BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # Now Layer 2: Webshare
+WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # Layer 3: Cloudflare WARP
 
 # Your YouTube channels
 CHANNELS = [
@@ -86,6 +86,7 @@ def process_channel(channel):
     result = None
     
     # --- DIRECT BYPASS FOR GLOBAL CHANNELS ---
+    # Zero bandwidth cost to your proxies
     if channel['group'] in ["Cartoons", "Science & Space", "Music"]:
         print(f"  -> Global channel detected. Attempting Direct GitHub Connection...")
         try:
@@ -93,19 +94,21 @@ def process_channel(channel):
         except Exception:
             print(f"  -> Direct failed for {channel['id']}. Falling back to proxy pipeline...")
 
-    # --- LAYER 1: WEBSHARE ---
-    if not result and BACKUP_PROXY:
-        try:
-            result = run_extractor(channel['url'], BACKUP_PROXY)
-        except Exception:
-            print(f"  -> Webshare failed/blocked for {channel['id']}. Routing to VMESS...")
-            
-    # --- LAYER 2: INDIAN VMESS NODE ---
+    # --- LAYER 1: INDIAN VMESS NODE ---
+    # Free, unlimited bandwidth meat shield
     if not result and PROXY:
         try:
             result = run_extractor(channel['url'], PROXY)
         except Exception:
-            print(f"  -> VMESS failed for {channel['id']}. Routing to Cloudflare WARP...")
+            print(f"  -> VMESS failed/blocked for {channel['id']}. Routing to Webshare...")
+            
+    # --- LAYER 2: WEBSHARE ---
+    # Fast, but capped data. Only triggers if VMESS fails.
+    if not result and BACKUP_PROXY:
+        try:
+            result = run_extractor(channel['url'], BACKUP_PROXY)
+        except Exception:
+            print(f"  -> Webshare failed for {channel['id']}. Routing to Cloudflare WARP...")
 
     # --- LAYER 3: CLOUDFLARE WARP ---
     if not result and WARP_PROXY:
