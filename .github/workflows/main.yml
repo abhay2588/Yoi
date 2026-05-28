@@ -1,4 +1,4 @@
-  name: Boot Indian VMESS Node (With Kill Switch)
+  - name: Boot Indian VMESS Node (With Kill Switch)
         env:
           VMESS_LINK: ${{ secrets.INDIAN_VMESS_LINK }}
         run: |
@@ -41,5 +41,5 @@
       - name: Run Extraction Script
         env:
           PROXY_URL: "socks5://127.0.0.1:10808"
-          BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }} # Keeps your Webshare proxy as a backup!
+          BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }}
         run: python update.py
