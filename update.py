@@ -10,8 +10,7 @@ OUTPUT_FILE = "live.m3u8"
 
 # Fetches proxies from your GitHub Action environment
 PROXY = os.environ.get("PROXY_URL")               # Layer 1: Indian VMESS
-BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") # Layer 2: Webshare (Restored!)
-WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # Layer 3: Cloudflare WARP
+WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # Layer 2: Cloudflare WARP
 
 # Your YouTube channels
 CHANNELS = [
@@ -75,8 +74,15 @@ CHANNELS = [
 ]
 
 def run_extractor(channel_url, proxy_to_use):
-    # TIMEOUT DROPPED TO 7 SECONDS FOR BLAZING FAST FALLBACKS
-    command = ["yt-dlp", "--socket-timeout", "7", "--cookies", "cookies.txt", "--remote-components", "ejs:github", "-J"]
+    command = [
+        "yt-dlp", 
+        "--socket-timeout", "7", 
+        "--cookies", "cookies.txt", 
+        "--remote-components", "ejs:github", 
+        # NEW MAGIC FIX: Spoof iOS and Android TV clients to bypass IP blocking
+        "--extractor-args", "youtube:client=ios,android", 
+        "-J"
+    ]
     if proxy_to_use:
         command.extend(["--proxy", proxy_to_use])
     command.append(channel_url)
@@ -98,28 +104,21 @@ def process_channel(channel):
         try:
             result = run_extractor(channel['url'], PROXY)
         except Exception:
-            print(f"  -> VMESS failed for {channel['id']}. Routing to Webshare...")
+            print(f"  -> VMESS failed for {channel['id']}. Routing to Cloudflare WARP...")
 
-    # --- LAYER 2: WEBSHARE (RESTORED) ---
-    if not result and BACKUP_PROXY:
-        try:
-            result = run_extractor(channel['url'], BACKUP_PROXY)
-        except Exception:
-            print(f"  -> Webshare failed for {channel['id']}. Routing to Cloudflare WARP...")
-            
-    # --- LAYER 3: CLOUDFLARE WARP ---
+    # --- LAYER 2: CLOUDFLARE WARP ---
     if not result and WARP_PROXY:
         try:
             result = run_extractor(channel['url'], WARP_PROXY)
         except Exception:
             print(f"  -> WARP failed for {channel['id']}. Trying Direct as last resort...")
             
-    # --- LAYER 4: FINAL CATCH-ALL (Direct) ---
+    # --- LAYER 3: FINAL CATCH-ALL (Direct) ---
     if not result:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
-            print(f"  -> FATAL: All 4 routes failed for: {channel['url']}")
+            print(f"  -> FATAL: All routes failed for: {channel['url']}")
             return None
 
     try:
@@ -154,7 +153,6 @@ def update_playlist():
     print("Base playlist saved. Spawning multi-thread extractors...")
 
     extracted_links = []
-    # BUMPED TO 20 WORKERS FOR FASTER MULTIFETCH
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
