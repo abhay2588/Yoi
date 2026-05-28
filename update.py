@@ -4,14 +4,11 @@ import requests
 import os
 import concurrent.futures
 
-# The URL to your static Jokr playlist
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
-# Fetches your Webshare proxy
 BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") 
 
-# Your YouTube channels
 CHANNELS = [
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
     {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"},
@@ -63,7 +60,6 @@ CHANNELS = [
     {"url": "https://www.youtube.com/@ChillhopMusic/live", "group": "Music", "logo": "", "id": "ChillhopMusic"}
 ]
 
-# --- NEW: THE SMART CACHE READER ---
 def load_existing_playlist():
     cache = {}
     if os.path.exists(OUTPUT_FILE):
@@ -74,12 +70,10 @@ def load_existing_playlist():
         for block in blocks:
             if '#EXTINF' in block and 'tvg-id="' in block:
                 try:
-                    # Extract the ID
                     id_start = block.find('tvg-id="') + 8
                     id_end = block.find('"', id_start)
                     chan_id = block[id_start:id_end]
                     
-                    # Extract the URL (always the last line of the block)
                     lines = block.strip().split('\n')
                     url = lines[-1]
                     
@@ -91,10 +85,8 @@ def load_existing_playlist():
 
 EXISTING_CACHE = load_existing_playlist()
 
-# --- NEW: THE TINY PING TEST ---
 def is_link_alive(url):
     try:
-        # A tiny HTTP request just to see if YouTube returns a 403 Forbidden
         headers = {'User-Agent': 'Mozilla/5.0'}
         r = requests.head(url, headers=headers, timeout=5)
         return r.status_code == 200
@@ -107,7 +99,8 @@ def run_extractor(channel_url, proxy_to_use):
         "--socket-timeout", "7", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
-        "--extractor-args", "youtube:client=ios,android", 
+        # FORCING ANDROID CLIENT: Extremely lightweight, uses significantly less data
+        "--extractor-args", "youtube:client=android", 
         "-J"
     ]
     if proxy_to_use:
@@ -118,28 +111,20 @@ def run_extractor(channel_url, proxy_to_use):
 def process_channel(channel):
     print(f"Started: {channel['id']}")
     
-    # --- STEP 1: CHECK THE SMART CACHE ---
-    # Cost: 0 Proxy Bandwidth!
     cached_data = EXISTING_CACHE.get(channel['id'])
     if cached_data:
-        print(f"  -> Testing cached token for {channel['id']}...")
         if is_link_alive(cached_data['url']):
-            print(f"  -> SUCCESS: Token still alive! Bypassing Webshare. 🟢")
+            print(f"  -> SUCCESS: Token alive. Bypassing Webshare. 🟢")
             return cached_data['block']
-        else:
-            print(f"  -> Cache expired for {channel['id']}. Must fetch fresh link.")
 
     result = None
     
-    # --- STEP 2: DIRECT BYPASS FOR GLOBAL CHANNELS ---
     if channel['group'] in ["Cartoons", "Science & Space", "Music"]:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
             pass
 
-    # --- STEP 3: THE WEBSHARE LIFELINE ---
-    # Will only trigger for News channels where the cache is officially dead
     if not result and BACKUP_PROXY:
         try:
             print(f"  -> Hitting Webshare for {channel['id']}...")
@@ -147,7 +132,6 @@ def process_channel(channel):
         except Exception:
             pass
             
-    # --- STEP 4: DIRECT FALLBACK ---
     if not result:
         try:
             result = run_extractor(channel['url'], None)
@@ -186,9 +170,21 @@ def update_playlist():
     print("Base playlist saved. Spawning Smart Extractors...")
 
     extracted_links = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    # DROPPED TO 4 WORKERS to prevent Webshare rate-limiting and bandwidth spikes
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
+            if res:
+                extracted_links.append(res)
+
+    print("Extraction complete. Writing to file...")
+    with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
+        for link in extracted_links:
+            f.write(link)
+    print("Playlist updated successfully!")
+
+if __name__ == "__main__":
+    update_playlist()     for res in results:
             if res:
                 extracted_links.append(res)
 
