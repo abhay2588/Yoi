@@ -8,13 +8,11 @@ import concurrent.futures
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
-# Fetches proxies from your GitHub Action environment
-PROXY = os.environ.get("PROXY_URL")               # Layer 1: Indian VMESS
-WARP_PROXY = os.environ.get("WARP_PROXY_URL")     # Layer 2: Cloudflare WARP
+# Fetches your Webshare proxy
+BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") 
 
 # Your YouTube channels
 CHANNELS = [
-    # --- NEWS (HINDI & REGIONAL) ---
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
     {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"},
     {"url": "https://www.youtube.com/@zeenews/live", "group": "News", "logo": "", "id": "zeenews"},
@@ -39,15 +37,11 @@ CHANNELS = [
     {"url": "https://www.youtube.com/@IBC24/live", "group": "News", "logo": "", "id": "ibc24"},
     {"url": "https://www.youtube.com/@ZeeMPCG/live", "group": "News", "logo": "", "id": "zeempcg"},
     {"url": "https://www.youtube.com/@News18MPCG/live", "group": "News", "logo": "", "id": "news18mpcg"},
-
-    # --- NEWS (INTERNATIONAL) ---
     {"url": "https://www.youtube.com/@WION/live", "group": "News", "logo": "", "id": "WION"},
     {"url": "https://www.youtube.com/@cnnnews18/live", "group": "News", "logo": "", "id": "cnnnews18"},
     {"url": "https://www.youtube.com/@Firstpost/live", "group": "News", "logo": "", "id": "Firstpost"},
     {"url": "https://www.youtube.com/@ABCNews/live", "group": "News", "logo": "", "id": "abcnews"},
     {"url": "https://www.youtube.com/@livenowfox/live", "group": "News", "logo": "", "id": "livenowfox"},
-
-    # --- CARTOONS ---
     {"url": "https://www.youtube.com/@SpongeBobOfficial/live", "group": "Cartoons", "logo": "", "id": "spongebob"},
     {"url": "https://www.youtube.com/@PeppaPigOfficial/live", "group": "Cartoons", "logo": "", "id": "peppapig"},
     {"url": "https://www.youtube.com/@WBKids/live", "group": "Cartoons", "logo": "", "id": "wbkids"},
@@ -62,16 +56,50 @@ CHANNELS = [
     {"url": "https://www.youtube.com/@ShauntheSheep/live", "group": "Cartoons", "logo": "", "id": "shaunthesheep"},
     {"url": "https://www.youtube.com/@MorphleTV/live", "group": "Cartoons", "logo": "", "id": "morphle"},
     {"url": "https://www.youtube.com/@Teletubbies/live", "group": "Cartoons", "logo": "", "id": "teletubbies"},
-
-    # --- SCIENCE & SPACE ---
     {"url": "https://www.youtube.com/@NASA/live", "group": "Science & Space", "logo": "", "id": "nasa"},
     {"url": "https://www.youtube.com/@SpaceX/live", "group": "Science & Space", "logo": "", "id": "SpaceX"},
     {"url": "https://www.youtube.com/@Sen/live", "group": "Science & Space", "logo": "", "id": "Sen"},
-
-    # --- MUSIC ---
     {"url": "https://www.youtube.com/@LofiGirl/live", "group": "Music", "logo": "", "id": "lofigirl"},
     {"url": "https://www.youtube.com/@ChillhopMusic/live", "group": "Music", "logo": "", "id": "ChillhopMusic"}
 ]
+
+# --- NEW: THE SMART CACHE READER ---
+def load_existing_playlist():
+    cache = {}
+    if os.path.exists(OUTPUT_FILE):
+        with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        blocks = content.split('\n\n')
+        for block in blocks:
+            if '#EXTINF' in block and 'tvg-id="' in block:
+                try:
+                    # Extract the ID
+                    id_start = block.find('tvg-id="') + 8
+                    id_end = block.find('"', id_start)
+                    chan_id = block[id_start:id_end]
+                    
+                    # Extract the URL (always the last line of the block)
+                    lines = block.strip().split('\n')
+                    url = lines[-1]
+                    
+                    if url.startswith('http'):
+                        cache[chan_id] = {'block': block.strip() + '\n\n', 'url': url}
+                except Exception:
+                    pass
+    return cache
+
+EXISTING_CACHE = load_existing_playlist()
+
+# --- NEW: THE TINY PING TEST ---
+def is_link_alive(url):
+    try:
+        # A tiny HTTP request just to see if YouTube returns a 403 Forbidden
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        r = requests.head(url, headers=headers, timeout=5)
+        return r.status_code == 200
+    except:
+        return False
 
 def run_extractor(channel_url, proxy_to_use):
     command = [
@@ -79,7 +107,6 @@ def run_extractor(channel_url, proxy_to_use):
         "--socket-timeout", "7", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
-        # NEW MAGIC FIX: Spoof iOS and Android TV clients to bypass IP blocking
         "--extractor-args", "youtube:client=ios,android", 
         "-J"
     ]
@@ -89,36 +116,43 @@ def run_extractor(channel_url, proxy_to_use):
     return subprocess.run(command, capture_output=True, text=True, check=True, timeout=12)
 
 def process_channel(channel):
-    print(f"Started: {channel['url']}")
+    print(f"Started: {channel['id']}")
+    
+    # --- STEP 1: CHECK THE SMART CACHE ---
+    # Cost: 0 Proxy Bandwidth!
+    cached_data = EXISTING_CACHE.get(channel['id'])
+    if cached_data:
+        print(f"  -> Testing cached token for {channel['id']}...")
+        if is_link_alive(cached_data['url']):
+            print(f"  -> SUCCESS: Token still alive! Bypassing Webshare. 🟢")
+            return cached_data['block']
+        else:
+            print(f"  -> Cache expired for {channel['id']}. Must fetch fresh link.")
+
     result = None
     
-    # --- DIRECT BYPASS FOR GLOBAL CHANNELS ---
+    # --- STEP 2: DIRECT BYPASS FOR GLOBAL CHANNELS ---
     if channel['group'] in ["Cartoons", "Science & Space", "Music"]:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
-            print(f"  -> Direct failed for {channel['id']}. Falling back to proxy pipeline...")
+            pass
 
-    # --- LAYER 1: INDIAN VMESS NODE ---
-    if not result and PROXY:
+    # --- STEP 3: THE WEBSHARE LIFELINE ---
+    # Will only trigger for News channels where the cache is officially dead
+    if not result and BACKUP_PROXY:
         try:
-            result = run_extractor(channel['url'], PROXY)
+            print(f"  -> Hitting Webshare for {channel['id']}...")
+            result = run_extractor(channel['url'], BACKUP_PROXY)
         except Exception:
-            print(f"  -> VMESS failed for {channel['id']}. Routing to Cloudflare WARP...")
-
-    # --- LAYER 2: CLOUDFLARE WARP ---
-    if not result and WARP_PROXY:
-        try:
-            result = run_extractor(channel['url'], WARP_PROXY)
-        except Exception:
-            print(f"  -> WARP failed for {channel['id']}. Trying Direct as last resort...")
+            pass
             
-    # --- LAYER 3: FINAL CATCH-ALL (Direct) ---
+    # --- STEP 4: DIRECT FALLBACK ---
     if not result:
         try:
             result = run_extractor(channel['url'], None)
         except Exception:
-            print(f"  -> FATAL: All routes failed for: {channel['url']}")
+            print(f"  -> FATAL: All routes failed for {channel['id']} 🔴")
             return None
 
     try:
@@ -126,7 +160,7 @@ def process_channel(channel):
         channel_name = video_data.get("uploader", "Unknown Channel")
         m3u8_url = video_data.get("manifest_url") or video_data.get("url")
         if m3u8_url:
-            print(f"  -> Success: {channel_name}")
+            print(f"  -> Fetched fresh token: {channel_name} 🟢")
             return f'#EXTINF:-1 tvg-id="{channel["id"]}" tvg-logo="{channel["logo"]}" group-title="{channel["group"]}", {channel_name}\n{m3u8_url}\n\n'
         else:
             return None
@@ -139,8 +173,7 @@ def update_playlist():
         response = requests.get(JOKR_PLAYLIST_URL)
         response.raise_for_status()
         base_content = response.text
-    except Exception as e:
-        print(f"Failed to fetch Jokr playlist: {e}")
+    except Exception:
         base_content = "#EXTM3U\n\n"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
@@ -150,7 +183,7 @@ def update_playlist():
         if not base_content.endswith("\n"):
             f.write("\n\n")
     
-    print("Base playlist saved. Spawning multi-thread extractors...")
+    print("Base playlist saved. Spawning Smart Extractors...")
 
     extracted_links = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
