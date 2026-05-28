@@ -143,6 +143,8 @@ https://aayee-wine.vercel.app/2504/default_ott.mpd?|drmScheme=clearkey&drmLicens
 
 #EXTINF:-1 group-title="Sports", FOX HINDI ( KAYO )
 https://dck1-ak-livedazn.akamaized.net/out/v1/814bffb9b389f652/e1f3582cdf2a4b4fbc1b8a7306d8c757/index.mpd|drmScheme=clearkey&drmLicense=d61f78cdfd675eee8a2144f5f7142a33:7a4d6f780440cd645d9bcaaa1295529d
+#EXTINF:-1 group-title="Sports", FOX HINDI ( KAYO )
+https://dck1-ak-livedazn.akamaized.net/out/v1/814bffb9b389f652/e1f3582cdf2a4b4fbc1b8a7306d8c757/index.mpd|drmScheme=clearkey&drmLicense=d61f78cdfd675eee8a2144f5f7142a33:7a4d6f780440cd645d9bcaaa1295529d
 #EXTINF:-1 tvg-id="aajtak" tvg-logo="" group-title="News", Aaj Tak
 https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1780008169/ei/iXAYarrLO4qy2roPn4KooAs/ip/142.111.67.146/id/2pELnKSpTPs.2/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/tx/51828967/txs/51828967%2C51828968/hfr/1/maxh/4320/playlist_duration/30/manifest_duration/30/maudio/1/siu/1/bui/AbKmrwoYxk1Yg7FLJOXuJXHY5TVQaZvNbb4PhhQpJ9ObRpt_dH1L_ysoLMQTUWcFWDgdNuvlPQ/spc/96Xrv-RJf1VyF5ik6M-XHIHvDocaS_JmmfF1PF-bb-NRERnOkj6kwIYTjbYc5aD5bA7wZA/vprv/1/go/1/ns/8xcBkGLwevFIaKL__R54GzwV/rqh/5/reg/0/pacing/0/nvgoi/1/ncsapi/1/keepalive/yes/fexp/51565115%2C51565682%2C51946185/dover/11/n/H3YSjSGsw4xCGg/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Ctx%2Ctxs%2Chfr%2Cmaxh%2Cplaylist_duration%2Cmanifest_duration%2Cmaudio%2Csiu%2Cbui%2Cspc%2Cvprv%2Cgo%2Cns%2Crqh%2Creg%2Citag%2Cplaylist_type/sig/AHEqNM4wRAIgf-Y8yEvMfQOUipMbGx-Mtm7kLJJ-yC7fYUPnkLYlv5ECIByo5SdEbrljJledlFzTzk4SyWnuHtgnD6pIaBFSzDky/file/index.m3u8
 
