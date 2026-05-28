@@ -7,8 +7,7 @@ import concurrent.futures
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
-# --- NEW: THE TOR GHOST TUNNEL ---
-TOR_PROXY = "socks5://127.0.0.1:9050"
+BACKUP_PROXY = os.environ.get("BACKUP_PROXY_URL") 
 
 CHANNELS = [
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
@@ -97,7 +96,7 @@ def is_link_alive(url):
 def run_extractor(channel_url, proxy_to_use):
     command = [
         "yt-dlp", 
-        "--socket-timeout", "15", # Extended to 15s because Tor routing is slower 
+        "--socket-timeout", "7", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
         "--extractor-args", "youtube:client=android", 
@@ -106,7 +105,7 @@ def run_extractor(channel_url, proxy_to_use):
     if proxy_to_use:
         command.extend(["--proxy", proxy_to_use])
     command.append(channel_url)
-    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=25)
+    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=12)
 
 def process_channel(channel):
     print(f"Started: {channel['id']}")
@@ -114,7 +113,7 @@ def process_channel(channel):
     cached_data = EXISTING_CACHE.get(channel['id'])
     if cached_data:
         if is_link_alive(cached_data['url']):
-            print(f"  -> SUCCESS: Token alive. Bypassing extraction. 🟢")
+            print(f"  -> SUCCESS: Token alive. Bypassing Webshare. 🟢")
             return cached_data['block']
 
     result = None
@@ -125,13 +124,11 @@ def process_channel(channel):
         except Exception:
             pass
 
-    # --- HITTING THE TOR NETWORK ---
-    if not result:
+    if not result and BACKUP_PROXY:
         try:
-            print(f"  -> Routing {channel['id']} through Tor SOCKS5...")
-            result = run_extractor(channel['url'], TOR_PROXY)
-        except Exception as e:
-            print(f"  -> Tor failed for {channel['id']}: {e}")
+            print(f"  -> Hitting Webshare for {channel['id']}...")
+            result = run_extractor(channel['url'], BACKUP_PROXY)
+        except Exception:
             pass
             
     if not result:
@@ -169,10 +166,9 @@ def update_playlist():
         if not base_content.endswith("\n"):
             f.write("\n\n")
     
-    print("Base playlist saved. Spawning Tor Extractors...")
+    print("Base playlist saved. Spawning Smart Extractors...")
 
     extracted_links = []
-    # Kept at 4 workers so we don't clog the local Tor tunnel
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
