@@ -93,29 +93,28 @@ def run_extractor(channel_url, proxy_to_use):
 # The worker function with Smart Routing
 def process_channel(channel):
     print(f"Started: {channel['url']}")
+    result = None
     
-    # ATTEMPT 1: Direct Connection (Uses GitHub's infinite free bandwidth)
-    try:
-        result = run_extractor(channel['url'], None)
-    except Exception:
-        # ATTEMPT 2: Fallback to Webshare Proxy
-        print(f"  -> Direct blocked for {channel['id']}. Routing to Webshare...")
-        if PROXY:
-            try:
-                result = run_extractor(channel['url'], PROXY)
-            except Exception:
-                # ATTEMPT 3: Fallback to Backup Proxy
-                if BACKUP_PROXY:
-                    print(f"  -> Webshare failed for {channel['id']}. Trying Backup...")
-                    try:
-                        result = run_extractor(channel['url'], BACKUP_PROXY)
-                    except Exception:
-                        print(f"  -> All routes failed: {channel['url']}")
-                        return None
-                else:
-                    print(f"  -> Webshare failed: {channel['url']}")
-                    return None
-        else:
+    # ATTEMPT 1: Primary Proxy (Indian VMESS Node)
+    if PROXY:
+        try:
+            result = run_extractor(channel['url'], PROXY)
+        except Exception:
+            print(f"  -> VMESS blocked/failed for {channel['id']}. Routing to Webshare...")
+            
+    # ATTEMPT 2: Fallback Proxy (Webshare)
+    if not result and BACKUP_PROXY:
+        try:
+            result = run_extractor(channel['url'], BACKUP_PROXY)
+        except Exception:
+            print(f"  -> Webshare failed for {channel['id']}. Trying Direct connection...")
+            
+    # ATTEMPT 3: Direct Connection (GitHub's Azure IP)
+    if not result:
+        try:
+            result = run_extractor(channel['url'], None)
+        except Exception:
+            print(f"  -> All routes (VMESS, Webshare, Direct) failed: {channel['url']}")
             return None
 
     # If any of the 3 routes succeeded, process the JSON data
@@ -173,4 +172,4 @@ def update_playlist():
 
 # THE TRIGGER!
 if __name__ == "__main__":
-    update_playlist()
+    update_playlist()            
