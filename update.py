@@ -99,7 +99,6 @@ def run_extractor(channel_url, proxy_to_use):
         "--socket-timeout", "7", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
-        # FORCING ANDROID CLIENT: Extremely lightweight, uses significantly less data
         "--extractor-args", "youtube:client=android", 
         "-J"
     ]
@@ -170,7 +169,6 @@ def update_playlist():
     print("Base playlist saved. Spawning Smart Extractors...")
 
     extracted_links = []
-    # DROPPED TO 4 WORKERS to prevent Webshare rate-limiting and bandwidth spikes
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
@@ -184,15 +182,4 @@ def update_playlist():
     print("Playlist updated successfully!")
 
 if __name__ == "__main__":
-    update_playlist()     for res in results:
-            if res:
-                extracted_links.append(res)
-
-    print("Extraction complete. Writing to file...")
-    with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
-        for link in extracted_links:
-            f.write(link)
-    print("Playlist updated successfully!")
-
-if __name__ == "__main__":
-    update_playlist()            
+    update_playlist()
