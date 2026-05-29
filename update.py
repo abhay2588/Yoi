@@ -132,13 +132,4 @@ def update_playlist():
     print("Playlist updated successfully! (Debug Mode)")
 
 if __name__ == "__main__":
-    update_playlist()end(res)
-
-    print("Extraction complete. Writing to file...")
-    with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
-        for link in extracted_links:
-            f.write(link)
-    print("Playlist updated successfully!")
-
-if __name__ == "__main__":
     update_playlist()
