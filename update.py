@@ -107,7 +107,7 @@ def run_extractor(channel_url, proxy_to_use):
         "--socket-timeout", "12", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
-        "--extractor-args", "youtube:client=android", 
+        "--extractor-args", "youtube:client=tv", 
         "-J"
     ]
     if proxy_to_use:
