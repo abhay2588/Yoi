@@ -7,6 +7,7 @@ import concurrent.futures
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
+# --- THE 5-PROXY WATERFALL POOL ---
 PROXIES = []
 for i in range(1, 6):
     p = os.environ.get(f"PROXY_{i}")
@@ -17,16 +18,59 @@ legacy_proxy = os.environ.get("BACKUP_PROXY_URL")
 if legacy_proxy and legacy_proxy not in PROXIES:
     PROXIES.append(legacy_proxy)
 
+# --- THE FULL CHANNEL LIST ---
 CHANNELS = [
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
     {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"},
     {"url": "https://www.youtube.com/@zeenews/live", "group": "News", "logo": "", "id": "zeenews"},
     {"url": "https://www.youtube.com/@timesnownavbharat/live", "group": "News", "logo": "", "id": "timesnownavbharat"},
     {"url": "https://www.youtube.com/@TV9Bharatvarsh/live", "group": "News", "logo": "", "id": "TV9Bharatvarsh"},
-    {"url": "https://www.youtube.com/@ndtvindia/live", "group": "News", "logo": "", "id": "ndtvindia"}
-    # Truncated the list temporarily for faster debugging! We only need to test a few.
+    {"url": "https://www.youtube.com/@ndtvindia/live", "group": "News", "logo": "", "id": "ndtvindia"},
+    {"url": "https://www.youtube.com/@news18india/live", "group": "News", "logo": "", "id": "news18india"},
+    {"url": "https://www.youtube.com/@nmfnews/live", "group": "News", "logo": "", "id": "nmfnews"},
+    {"url": "https://www.youtube.com/@bharat24/live", "group": "News", "logo": "", "id": "bharat24"},
+    {"url": "https://www.youtube.com/@indiatv/live", "group": "News", "logo": "", "id": "indiatv"},
+    {"url": "https://www.youtube.com/@bbchindi/live", "group": "News", "logo": "", "id": "bbchindi"},
+    {"url": "https://www.youtube.com/@DDnews/live", "group": "News", "logo": "", "id": "DDnews"},
+    {"url": "https://www.youtube.com/@republicbharat/live", "group": "News", "logo": "", "id": "republicbharat"},
+    {"url": "https://www.youtube.com/@news24/live", "group": "News", "logo": "", "id": "news24"}, 
+    {"url": "https://www.youtube.com/@TimesNow/live", "group": "News", "logo": "", "id": "TimesNow"}, 
+    {"url": "https://www.youtube.com/@TheLallantop/live", "group": "News", "logo": "", "id": "TheLallantop"},  
+    {"url": "https://www.youtube.com/@indiatoday/live", "group": "News", "logo": "", "id": "indiatoday"}, 
+    {"url": "https://www.youtube.com/@ndtv/live", "group": "News", "logo": "", "id": "ndtv"},
+    {"url": "https://www.youtube.com/@RepublicWorld/live", "group": "News", "logo": "", "id": "republicworld"},
+    {"url": "https://www.youtube.com/@hindustantimes/live", "group": "News", "logo": "", "id": "hindustantimes"},
+    {"url": "https://www.youtube.com/@NewsX/live", "group": "News", "logo": "", "id": "newsx"},
+    {"url": "https://www.youtube.com/@IBC24/live", "group": "News", "logo": "", "id": "ibc24"},
+    {"url": "https://www.youtube.com/@ZeeMPCG/live", "group": "News", "logo": "", "id": "zeempcg"},
+    {"url": "https://www.youtube.com/@News18MPCG/live", "group": "News", "logo": "", "id": "news18mpcg"},
+    {"url": "https://www.youtube.com/@WION/live", "group": "News", "logo": "", "id": "WION"},
+    {"url": "https://www.youtube.com/@cnnnews18/live", "group": "News", "logo": "", "id": "cnnnews18"},
+    {"url": "https://www.youtube.com/@Firstpost/live", "group": "News", "logo": "", "id": "Firstpost"},
+    {"url": "https://www.youtube.com/@ABCNews/live", "group": "News", "logo": "", "id": "abcnews"},
+    {"url": "https://www.youtube.com/@livenowfox/live", "group": "News", "logo": "", "id": "livenowfox"},
+    {"url": "https://www.youtube.com/@SpongeBobOfficial/live", "group": "Cartoons", "logo": "", "id": "spongebob"},
+    {"url": "https://www.youtube.com/@PeppaPigOfficial/live", "group": "Cartoons", "logo": "", "id": "peppapig"},
+    {"url": "https://www.youtube.com/@WBKids/live", "group": "Cartoons", "logo": "", "id": "wbkids"},
+    {"url": "https://www.youtube.com/@MashaBearHINDi/live", "group": "Cartoons", "logo": "", "id": "MashaBearHINDi"},
+    {"url": "https://www.youtube.com/@CartoonitoFrance/live", "group": "Cartoons", "logo": "", "id": "CartoonitoFrance"},
+    {"url": "https://www.youtube.com/@mrbeananimated/live", "group": "Cartoons", "logo": "", "id": "mrbeananimated"},
+    {"url": "https://www.youtube.com/@oddbods/live", "group": "Cartoons", "logo": "", "id": "oddbods"},
+    {"url": "https://www.youtube.com/@smurfs/live", "group": "Cartoons", "logo": "", "id": "smurfs"},
+    {"url": "https://www.youtube.com/@TalkingFriends/live", "group": "Cartoons", "logo": "", "id": "talkingtom"},
+    {"url": "https://www.youtube.com/@AngryBirds/live", "group": "Cartoons", "logo": "", "id": "AngryBirds"},
+    {"url": "https://www.youtube.com/@dckids/live", "group": "Cartoons", "logo": "", "id": "dckids"},
+    {"url": "https://www.youtube.com/@ShauntheSheep/live", "group": "Cartoons", "logo": "", "id": "shaunthesheep"},
+    {"url": "https://www.youtube.com/@MorphleTV/live", "group": "Cartoons", "logo": "", "id": "morphle"},
+    {"url": "https://www.youtube.com/@Teletubbies/live", "group": "Cartoons", "logo": "", "id": "teletubbies"},
+    {"url": "https://www.youtube.com/@NASA/live", "group": "Science & Space", "logo": "", "id": "nasa"},
+    {"url": "https://www.youtube.com/@SpaceX/live", "group": "Science & Space", "logo": "", "id": "SpaceX"},
+    {"url": "https://www.youtube.com/@Sen/live", "group": "Science & Space", "logo": "", "id": "Sen"},
+    {"url": "https://www.youtube.com/@LofiGirl/live", "group": "Music", "logo": "", "id": "lofigirl"},
+    {"url": "https://www.youtube.com/@ChillhopMusic/live", "group": "Music", "logo": "", "id": "ChillhopMusic"}
 ]
 
+# --- SMART CACHE ENGINE ---
 def load_existing_playlist():
     cache = {}
     if os.path.exists(OUTPUT_FILE):
@@ -60,7 +104,7 @@ def is_link_alive(url):
 def run_extractor(channel_url, proxy_to_use):
     command = [
         "yt-dlp", 
-        "--socket-timeout", "10", 
+        "--socket-timeout", "12", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
         "--extractor-args", "youtube:client=android", 
@@ -70,12 +114,12 @@ def run_extractor(channel_url, proxy_to_use):
         command.extend(["--proxy", proxy_to_use])
     command.append(channel_url)
     
-    # We are capturing both standard output and standard error now
-    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=15)
+    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
 
 def process_channel(channel):
     print(f"Started: {channel['id']}")
     
+    # 1. Check Smart Cache
     cached_data = EXISTING_CACHE.get(channel['id'])
     if cached_data:
         if is_link_alive(cached_data['url']):
@@ -84,7 +128,7 @@ def process_channel(channel):
 
     result = None
     
-    # THE MULTI-PROXY WATERFALL WITH DEEP DEBUGGING
+    # 2. Multi-Proxy Waterfall
     if not result and PROXIES:
         for index, proxy in enumerate(PROXIES, start=1):
             try:
@@ -92,19 +136,11 @@ def process_channel(channel):
                 result = run_extractor(channel['url'], proxy)
                 if result:
                     break 
-            
-            # --- THE MAGIC DEBUG BLOCK ---
-            except subprocess.CalledProcessError as e:
-                error_output = e.stderr if e.stderr else e.stdout
-                print(f"  -> [CRITICAL ERROR] Proxy {index} crashed! Reason:\n      {error_output.strip()}")
-                result = None
-            except subprocess.TimeoutExpired:
-                print(f"  -> [TIMEOUT] Proxy {index} took too long to respond.")
-                result = None
             except Exception as e:
-                print(f"  -> [SYSTEM ERROR] Proxy {index} failed: {str(e)}")
+                print(f"  -> Proxy {index} failed. Moving to next...")
                 result = None
 
+    # 3. Process Data
     try:
         if result:
             video_data = json.loads(result.stdout.strip())
@@ -116,20 +152,40 @@ def process_channel(channel):
     except Exception:
         pass
         
+    print(f"  -> FATAL: All routes failed for {channel['id']} 🔴")
     return None
 
 def update_playlist():
+    print(f"Fetching base playlist from {JOKR_PLAYLIST_URL}...")
+    try:
+        response = requests.get(JOKR_PLAYLIST_URL)
+        response.raise_for_status()
+        base_content = response.text
+    except Exception:
+        base_content = "#EXTM3U\n\n"
+
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        if not base_content.strip().startswith("#EXTM3U"):
+            f.write("#EXTM3U\n\n")
+        f.write(base_content)
+        if not base_content.endswith("\n"):
+            f.write("\n\n")
+    
     print(f"Spawning Smart Extractors with {len(PROXIES)} active proxies...")
     extracted_links = []
     
-    # Dropped to 1 worker so the logs print perfectly in order
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+    # Running 4 parallel workers for optimal speed + Webshare safety
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
             if res:
                 extracted_links.append(res)
 
-    print("Playlist updated successfully! (Debug Mode)")
+    print("Extraction complete. Writing to file...")
+    with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
+        for link in extracted_links:
+            f.write(link)
+    print("Playlist updated successfully!")
 
 if __name__ == "__main__":
     update_playlist()
