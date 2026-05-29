@@ -2,9 +2,8 @@ name: Yoi Auto Update
 
 on:
   schedule:
-    # Runs every 8 hours (3 times a day) to maximize Webshare data lifespan
-    - cron: "0 */5 * * *"
-  workflow_dispatch: # Allows manual triggering from the Actions tab
+    - cron: "0 */6 * * *"
+  workflow_dispatch: 
 
 jobs:
   update-playlist:
@@ -30,8 +29,12 @@ jobs:
 
       - name: Run Extraction Script
         env:
-          # Injects both primary and backup proxies into the Python script
-          PROXY_URL: ${{ secrets.PROXY_URL }}
+          PROXY_1: ${{ secrets.PROXY_1 }}
+          PROXY_2: ${{ secrets.PROXY_2 }}
+          PROXY_3: ${{ secrets.PROXY_3 }}
+          PROXY_4: ${{ secrets.PROXY_4 }}
+          PROXY_5: ${{ secrets.PROXY_5 }}
+          # Keeping the legacy backup just in case
           BACKUP_PROXY_URL: ${{ secrets.BACKUP_PROXY_URL }}
         run: python update.py
 
@@ -40,6 +43,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add live.m3u8
-          # The || exit 0 prevents workflow failure if the cache caught everything
-          git commit -m "Auto-update channels via Webshare" || exit 0
+          git commit -m "Auto-update channels via Webshare Multi-Pool" || exit 0
           git push
