@@ -107,15 +107,19 @@ def run_extractor(channel_url, proxy_to_use):
         "--socket-timeout", "12", 
         "--cookies", "cookies.txt", 
         "--remote-components", "ejs:github", 
+        # --- THE CONSOLE SPOOF ---
+        # 1. Tell YouTube we are using a TV-based app (Cobalt)
         "--extractor-args", "youtube:client=tv", 
+        # 2. Force the exact HTTP signature of an Xbox Series X
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edge/44.18363.8131",
         "-J"
     ]
+    
     if proxy_to_use:
         command.extend(["--proxy", proxy_to_use])
     command.append(channel_url)
     
     return subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
-
 def process_channel(channel):
     print(f"Started: {channel['id']}")
     
