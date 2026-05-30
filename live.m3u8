@@ -145,4 +145,4 @@ https://aayee-wine.vercel.app/2504/default_ott.mpd?|drmScheme=clearkey&drmLicens
 https://dck1-ak-livedazn.akamaized.net/out/v1/814bffb9b389f652/e1f3582cdf2a4b4fbc1b8a7306d8c757/index.mpd|drmScheme=clearkey&drmLicense=d61f78cdfd675eee8a2144f5f7142a33:7a4d6f780440cd645d9bcaaa1295529d
 
 #EXTINF:-1 tvg-id="disneysd" tvg-logo="" group-title="HINDI|KIDS", Disney SD
-https://astrocf.abhay258.workers.dev/11639.m3u8?name=MP22
+https://astrocf.abhay258.workers.dev/11639.m3u8?name=MP22|User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36
