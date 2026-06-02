@@ -7,6 +7,7 @@ JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
 # --- THE DATA-SAVING PROXY WATERFALL ---
+# 'None' forces the script to try GitHub's free connection first.
 PROXIES = [None] 
 for i in range(1, 6):
     p = os.environ.get(f"PROXY_{i}")
@@ -96,25 +97,34 @@ def is_link_alive(url):
     except:
         return False
 
-# --- NATIVE PYTHON EXTRACTOR ---
+# --- NATIVE PYTHON EXTRACTOR (WITH VERBOSE DEBUGGING) ---
 def run_extractor(channel_url, proxy_to_use):
     ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'simulate': True,
-        'cookiefile': 'cookies.txt', 
-        'extractor_args': {'youtube': {'client': ['web']}} 
+        'cookiefile': 'cookies.txt',
+        'verbose': True,    
+        'quiet': False,     
+        'simulate': True,   
+        'extractor_args': {'youtube': {'client': ['tv']}} 
     }
-    
+
     if proxy_to_use:
         ydl_opts['proxy'] = proxy_to_use
-        
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(channel_url, download=False)
+            info = ydl.extract_info(channel_url, download=False)
+
+            print(f"\n--- DEBUG DATA FOR {info.get('id')} ---")
+            print("LIVE:", info.get("is_live"))
+            print("STATUS:", info.get("live_status"))
+            print("MANIFEST:", info.get("manifest_url"))
+            print("URL:", info.get("url"))
+            print("---------------------------\n")
+
+            return info
+            
     except Exception as e:
-        # This will now print the exact error to your Action logs if it crashes
-        print(f"      -> Internal extraction error: {str(e)}")
+        print(f"\n[!] CRASH AT EXTRACTOR LAYER: {e}")
         return None
 
 def process_channel(channel):
@@ -149,7 +159,6 @@ def process_channel(channel):
     try:
         if result:
             channel_name = result.get("uploader", "Unknown Channel")
-            # Using native yt_dlp dictionary keys
             m3u8_url = result.get("manifest_url") or result.get("url")
             if m3u8_url:
                 print(f"  -> Fetched fresh token: {channel_name} 🟢")
@@ -179,6 +188,8 @@ def update_playlist():
     print(f"Spawning Smart Extractors with {len(PROXIES)-1} active proxies...")
     extracted_links = []
     
+    # Threading is kept at 4. If the verbose logs become too chaotic to read 
+    # because they print at the same time, you can temporarily change max_workers to 1.
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
