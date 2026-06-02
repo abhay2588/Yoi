@@ -109,8 +109,10 @@ def is_link_alive(url):
     except Exception:
         return False
 
-# --- NATIVE PYTHON EXTRACTOR ---
+# REPLACE run_extractor()
+
 def run_extractor(channel_url, proxy_to_use):
+
     ydl_opts = {
         "cookiefile": "cookies.txt",
 
@@ -120,7 +122,8 @@ def run_extractor(channel_url, proxy_to_use):
 
         "extractor_args": {
             "youtube": {
-                "player_client": ["web"]
+                # Switched to clients that bypass the JavaScript 'n' signature puzzle
+                "player_client": ["android", "tv", "ios"]
             }
         },
 
