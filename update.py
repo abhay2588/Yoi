@@ -13,56 +13,10 @@ for i in range(1, 6):
     if p:
         PROXIES.append(p)
 
-# --- THE FULL CHANNEL LIST ---
+# --- 2-CHANNEL TEST SETUP ---
 CHANNELS = [
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
-    {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"},
-    {"url": "https://www.youtube.com/@zeenews/live", "group": "News", "logo": "", "id": "zeenews"},
-    {"url": "https://www.youtube.com/@timesnownavbharat/live", "group": "News", "logo": "", "id": "timesnownavbharat"},
-    {"url": "https://www.youtube.com/@TV9Bharatvarsh/live", "group": "News", "logo": "", "id": "TV9Bharatvarsh"},
-    {"url": "https://www.youtube.com/@ndtvindia/live", "group": "News", "logo": "", "id": "ndtvindia"},
-    {"url": "https://www.youtube.com/@news18india/live", "group": "News", "logo": "", "id": "news18india"},
-    {"url": "https://www.youtube.com/@nmfnews/live", "group": "News", "logo": "", "id": "nmfnews"},
-    {"url": "https://www.youtube.com/@bharat24/live", "group": "News", "logo": "", "id": "bharat24"},
-    {"url": "https://www.youtube.com/@indiatv/live", "group": "News", "logo": "", "id": "indiatv"},
-    {"url": "https://www.youtube.com/@bbchindi/live", "group": "News", "logo": "", "id": "bbchindi"},
-    {"url": "https://www.youtube.com/@DDnews/live", "group": "News", "logo": "", "id": "DDnews"},
-    {"url": "https://www.youtube.com/@republicbharat/live", "group": "News", "logo": "", "id": "republicbharat"},
-    {"url": "https://www.youtube.com/@news24/live", "group": "News", "logo": "", "id": "news24"}, 
-    {"url": "https://www.youtube.com/@TimesNow/live", "group": "News", "logo": "", "id": "TimesNow"}, 
-    {"url": "https://www.youtube.com/@TheLallantop/live", "group": "News", "logo": "", "id": "TheLallantop"},  
-    {"url": "https://www.youtube.com/@indiatoday/live", "group": "News", "logo": "", "id": "indiatoday"}, 
-    {"url": "https://www.youtube.com/@ndtv/live", "group": "News", "logo": "", "id": "ndtv"},
-    {"url": "https://www.youtube.com/@RepublicWorld/live", "group": "News", "logo": "", "id": "republicworld"},
-    {"url": "https://www.youtube.com/@hindustantimes/live", "group": "News", "logo": "", "id": "hindustantimes"},
-    {"url": "https://www.youtube.com/@NewsX/live", "group": "News", "logo": "", "id": "newsx"},
-    {"url": "https://www.youtube.com/@IBC24/live", "group": "News", "logo": "", "id": "ibc24"},
-    {"url": "https://www.youtube.com/@ZeeMPCG/live", "group": "News", "logo": "", "id": "zeempcg"},
-    {"url": "https://www.youtube.com/@News18MPCG/live", "group": "News", "logo": "", "id": "news18mpcg"},
-    {"url": "https://www.youtube.com/@WION/live", "group": "News", "logo": "", "id": "WION"},
-    {"url": "https://www.youtube.com/@cnnnews18/live", "group": "News", "logo": "", "id": "cnnnews18"},
-    {"url": "https://www.youtube.com/@Firstpost/live", "group": "News", "logo": "", "id": "Firstpost"},
-    {"url": "https://www.youtube.com/@ABCNews/live", "group": "News", "logo": "", "id": "abcnews"},
-    {"url": "https://www.youtube.com/@livenowfox/live", "group": "News", "logo": "", "id": "livenowfox"},
-    {"url": "https://www.youtube.com/@SpongeBobOfficial/live", "group": "Cartoons", "logo": "", "id": "spongebob"},
-    {"url": "https://www.youtube.com/@PeppaPigOfficial/live", "group": "Cartoons", "logo": "", "id": "peppapig"},
-    {"url": "https://www.youtube.com/@WBKids/live", "group": "Cartoons", "logo": "", "id": "wbkids"},
-    {"url": "https://www.youtube.com/@MashaBearHINDi/live", "group": "Cartoons", "logo": "", "id": "MashaBearHINDi"},
-    {"url": "https://www.youtube.com/@CartoonitoFrance/live", "group": "Cartoons", "logo": "", "id": "CartoonitoFrance"},
-    {"url": "https://www.youtube.com/@mrbeananimated/live", "group": "Cartoons", "logo": "", "id": "mrbeananimated"},
-    {"url": "https://www.youtube.com/@oddbods/live", "group": "Cartoons", "logo": "", "id": "oddbods"},
-    {"url": "https://www.youtube.com/@smurfs/live", "group": "Cartoons", "logo": "", "id": "smurfs"},
-    {"url": "https://www.youtube.com/@TalkingFriends/live", "group": "Cartoons", "logo": "", "id": "talkingtom"},
-    {"url": "https://www.youtube.com/@AngryBirds/live", "group": "Cartoons", "logo": "", "id": "AngryBirds"},
-    {"url": "https://www.youtube.com/@dckids/live", "group": "Cartoons", "logo": "", "id": "dckids"},
-    {"url": "https://www.youtube.com/@ShauntheSheep/live", "group": "Cartoons", "logo": "", "id": "shaunthesheep"},
-    {"url": "https://www.youtube.com/@MorphleTV/live", "group": "Cartoons", "logo": "", "id": "morphle"},
-    {"url": "https://www.youtube.com/@Teletubbies/live", "group": "Cartoons", "logo": "", "id": "teletubbies"},
-    {"url": "https://www.youtube.com/@NASA/live", "group": "Science & Space", "logo": "", "id": "nasa"},
-    {"url": "https://www.youtube.com/@SpaceX/live", "group": "Science & Space", "logo": "", "id": "SpaceX"},
-    {"url": "https://www.youtube.com/@Sen/live", "group": "Science & Space", "logo": "", "id": "Sen"},
-    {"url": "https://www.youtube.com/@LofiGirl/live", "group": "Music", "logo": "", "id": "lofigirl"},
-    {"url": "https://www.youtube.com/@ChillhopMusic/live", "group": "Music", "logo": "", "id": "ChillhopMusic"}
+    {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"}
 ]
 
 # --- SMART CACHE ENGINE ---
@@ -93,7 +47,6 @@ def is_link_alive(url):
         headers = {
             "User-Agent": "Mozilla/5.0"
         }
-
         r = requests.get(
             url,
             headers=headers,
@@ -101,34 +54,33 @@ def is_link_alive(url):
             allow_redirects=True,
             timeout=5
         )
-
         alive = r.status_code == 200
         r.close()
         return alive
-
     except Exception:
         return False
 
-# REPLACE run_extractor()
-
+# --- NATIVE PYTHON EXTRACTOR ---
 def run_extractor(channel_url, proxy_to_use):
-
     ydl_opts = {
         "cookiefile": "cookies.txt",
-
-        "quiet": True,
+        
+        # Keep verbose on to catch the exact cookie/client conflict
+        "verbose": True,
+        "quiet": False,
         "no_warnings": False,
         "simulate": True,
 
         "extractor_args": {
             "youtube": {
-                # Switched to clients that bypass the JavaScript 'n' signature puzzle
-                "player_client": ["android", "tv", "ios"]
+                # This perfectly mimics the CLI argument that worked in RDP
+                "client": ["tv"] 
             }
         },
 
         "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+            # Matching the RDP Xbox signature to pair with the TV client
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edge/44.18363.8131"
         }
     }
 
@@ -143,11 +95,13 @@ def run_extractor(channel_url, proxy_to_use):
             )
 
     except Exception as e:
-        print(f"[!] Extractor failed: {e}")
+        print(f"\n[!] Extractor failed: {e}\n")
         return None
 
 def process_channel(channel):
+    print(f"\n========================================")
     print(f"Started: {channel['id']}")
+    print(f"========================================")
 
     cached_data = EXISTING_CACHE.get(channel["id"])
 
@@ -226,17 +180,17 @@ def update_playlist():
         if not base_content.endswith("\n"):
             f.write("\n\n")
     
-    print(f"Spawning Smart Extractors with {len(PROXIES)-1} active proxies...")
+    print(f"Spawning Smart Extractors for Test Run...")
     extracted_links = []
     
-    # Execution locked to 1 worker for clean sequential logging
+    # Single worker to keep the verbose logs completely isolated
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
             if res:
                 extracted_links.append(res)
 
-    print("Extraction complete. Writing to file...")
+    print("\nExtraction complete. Writing to file...")
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         for link in extracted_links:
             f.write(link)
