@@ -103,7 +103,7 @@ def run_extractor(channel_url, proxy_to_use):
         'no_warnings': True,
         'simulate': True,
         'cookiefile': 'cookies.txt', 
-        'extractor_args': {'youtube': {'client': ['tv']}} 
+        'extractor_args': {'youtube': {'client': ['web']}} 
     }
     
     if proxy_to_use:
