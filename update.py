@@ -13,7 +13,7 @@ for i in range(1, 6):
     if p:
         PROXIES.append(p)
 
-# --- 2-CHANNEL TEST SETUP ---
+# --- HYPER-FOCUSED 2-CHANNEL LOGGING TEST ---
 CHANNELS = [
     {"url": "https://www.youtube.com/@aajtak/live", "group": "News", "logo": "", "id": "aajtak"},
     {"url": "https://www.youtube.com/@abpnews/live", "group": "News", "logo": "", "id": "abpnews"}
@@ -64,23 +64,19 @@ def is_link_alive(url):
 def run_extractor(channel_url, proxy_to_use):
     ydl_opts = {
         "cookiefile": "cookies.txt",
-        
-        # Keep verbose on to catch the exact cookie/client conflict
-        "verbose": True,
-        "quiet": False,
+        "quiet": True,
         "no_warnings": False,
         "simulate": True,
 
         "extractor_args": {
             "youtube": {
-                # This perfectly mimics the CLI argument that worked in RDP
-                "client": ["tv"] 
+                # Safe native fallback clients that respect your JP cookies
+                "player_client": ["android", "ios", "tv"]
             }
         },
 
         "http_headers": {
-            # Matching the RDP Xbox signature to pair with the TV client
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edge/44.18363.8131"
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
         }
     }
 
@@ -93,18 +89,16 @@ def run_extractor(channel_url, proxy_to_use):
                 channel_url,
                 download=False
             )
-
     except Exception as e:
-        print(f"\n[!] Extractor failed: {e}\n")
+        print(f"      [!] Extractor Handshake Failed: {e}")
         return None
 
 def process_channel(channel):
     print(f"\n========================================")
-    print(f"Started: {channel['id']}")
+    print(f"Tracking Stream: {channel['id']}")
     print(f"========================================")
 
     cached_data = EXISTING_CACHE.get(channel["id"])
-
     if cached_data:
         if is_link_alive(cached_data["url"]):
             print(f"  -> Cache hit: {channel['id']} 🟢")
@@ -115,18 +109,13 @@ def process_channel(channel):
     for index, proxy in enumerate(PROXIES):
         try:
             if proxy is None:
-                print(f"  -> Direct connection: {channel['id']}")
+                print(f"  -> Route 0: Direct connection...")
             else:
-                print(f"  -> Proxy {index}: {channel['id']}")
+                print(f"  -> Route {index}: Webshare Proxy Pool...")
 
-            result = run_extractor(
-                channel["url"],
-                proxy
-            )
-
+            result = run_extractor(channel["url"], proxy)
             if result:
                 break
-
         except Exception:
             result = None
 
@@ -135,19 +124,11 @@ def process_channel(channel):
         return None
 
     try:
-        channel_name = (
-            result.get("uploader")
-            or result.get("channel")
-            or channel["id"]
-        )
-
-        m3u8_url = (
-            result.get("manifest_url")
-            or result.get("url")
-        )
+        channel_name = result.get("uploader") or result.get("channel") or channel["id"]
+        m3u8_url = result.get("manifest_url") or result.get("url")
 
         if not m3u8_url:
-            print(f"  -> No stream URL: {channel['id']} 🔴")
+            print(f"  -> No stream URL found: {channel['id']} 🔴")
             return None
 
         print(f"  -> Success: {channel_name} 🟢")
@@ -160,7 +141,6 @@ def process_channel(channel):
             f'{channel_name}\n'
             f'{m3u8_url}\n\n'
         )
-
     except Exception:
         return None
 
@@ -180,17 +160,16 @@ def update_playlist():
         if not base_content.endswith("\n"):
             f.write("\n\n")
     
-    print(f"Spawning Smart Extractors for Test Run...")
+    print(f"Launching Single-Thread Scraper Pipeline...")
     extracted_links = []
     
-    # Single worker to keep the verbose logs completely isolated
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
             if res:
                 extracted_links.append(res)
 
-    print("\nExtraction complete. Writing to file...")
+    print("\nProcessing complete. Syncing live.m3u8 data...")
     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
         for link in extracted_links:
             f.write(link)
