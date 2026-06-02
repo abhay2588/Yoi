@@ -2,8 +2,7 @@ name: Yoi Auto Update
 
 on:
   schedule:
-    # Runs every 8 hours to maximize your 5-proxy pool lifespan
-    - cron: "0 */6 * * *"
+    - cron: "0 */8 * * *"
   workflow_dispatch: 
 
 jobs:
@@ -21,20 +20,19 @@ jobs:
 
       - name: Install Dependencies (Python + Node.js)
         run: |
-          # Installs Node.js so yt-dlp can solve YouTube's JS puzzle
           sudo apt-get update
           sudo apt-get install -y nodejs
-          
           python -m pip install --upgrade pip
           pip install yt-dlp requests
 
       - name: Create Cookies File
         run: |
-          echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+          cat << 'EOF' > cookies.txt
+          ${{ secrets.YOUTUBE_COOKIES }}
+          EOF
 
       - name: Run Smart Extraction Script
         env:
-          # Injecting your 5-proxy pool (vmess removed)
           PROXY_1: ${{ secrets.PROXY_1 }}
           PROXY_2: ${{ secrets.PROXY_2 }}
           PROXY_3: ${{ secrets.PROXY_3 }}
@@ -47,5 +45,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add live.m3u8
-          git commit -m "Auto-update channels (Data-Optimized Proxy Waterfall)" || exit 0
+          git commit -m "Auto-update channels (Fully Fixed Extractor)" || exit 0
           git push
