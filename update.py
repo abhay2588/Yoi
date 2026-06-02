@@ -1,3 +1,4 @@
+
 import subprocess
 import json
 import requests
@@ -7,16 +8,14 @@ import concurrent.futures
 JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
-# --- THE 5-PROXY WATERFALL POOL ---
-PROXIES = []
+# --- THE DATA-SAVING PROXY WATERFALL ---
+# 'None' forces the script to try GitHub's free connection first.
+# This uses 0 Webshare bandwidth for globally available channels.
+PROXIES = [None] 
 for i in range(1, 6):
     p = os.environ.get(f"PROXY_{i}")
     if p:
         PROXIES.append(p)
-
-legacy_proxy = os.environ.get("BACKUP_PROXY_URL")
-if legacy_proxy and legacy_proxy not in PROXIES:
-    PROXIES.append(legacy_proxy)
 
 # --- THE FULL CHANNEL LIST ---
 CHANNELS = [
@@ -95,6 +94,7 @@ EXISTING_CACHE = load_existing_playlist()
 
 def is_link_alive(url):
     try:
+        # Pinging the M3U8 without a proxy saves bandwidth
         headers = {'User-Agent': 'Mozilla/5.0'}
         r = requests.head(url, headers=headers, timeout=5)
         return r.status_code == 200
@@ -120,6 +120,7 @@ def run_extractor(channel_url, proxy_to_use):
     command.append(channel_url)
     
     return subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
+
 def process_channel(channel):
     print(f"Started: {channel['id']}")
     
@@ -134,14 +135,18 @@ def process_channel(channel):
     
     # 2. Multi-Proxy Waterfall
     if not result and PROXIES:
-        for index, proxy in enumerate(PROXIES, start=1):
+        for index, proxy in enumerate(PROXIES):
             try:
-                print(f"  -> Hitting Proxy {index} for {channel['id']}...")
+                if proxy is None:
+                    print(f"  -> Attempting Direct Connection (No Proxy) for {channel['id']}...")
+                else:
+                    print(f"  -> Hitting Proxy {index} for {channel['id']}...")
+                    
                 result = run_extractor(channel['url'], proxy)
                 if result:
                     break 
             except Exception as e:
-                print(f"  -> Proxy {index} failed. Moving to next...")
+                print(f"  -> Route failed. Moving to next...")
                 result = None
 
     # 3. Process Data
@@ -175,7 +180,7 @@ def update_playlist():
         if not base_content.endswith("\n"):
             f.write("\n\n")
     
-    print(f"Spawning Smart Extractors with {len(PROXIES)} active proxies...")
+    print(f"Spawning Smart Extractors with {len(PROXIES)-1} active proxies...")
     extracted_links = []
     
     # Running 4 parallel workers for optimal speed + Webshare safety
