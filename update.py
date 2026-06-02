@@ -1,4 +1,3 @@
-
 import subprocess
 import json
 import requests
@@ -106,7 +105,6 @@ def run_extractor(channel_url, proxy_to_use):
         "yt-dlp", 
         "--socket-timeout", "12", 
         "--cookies", "cookies.txt", 
-        "--remote-components", "ejs:github", 
         # --- THE CONSOLE SPOOF ---
         # 1. Tell YouTube we are using a TV-based app (Cobalt)
         "--extractor-args", "youtube:client=tv", 
