@@ -1,5 +1,4 @@
-import subprocess
-import json
+import yt_dlp
 import requests
 import os
 import concurrent.futures
@@ -8,8 +7,6 @@ JOKR_PLAYLIST_URL = "https://raw.githubusercontent.com/abhay2588/jokr/main/yoi"
 OUTPUT_FILE = "live.m3u8"
 
 # --- THE DATA-SAVING PROXY WATERFALL ---
-# 'None' forces the script to try GitHub's free connection first.
-# This uses 0 Webshare bandwidth for globally available channels.
 PROXIES = [None] 
 for i in range(1, 6):
     p = os.environ.get(f"PROXY_{i}")
@@ -93,31 +90,32 @@ EXISTING_CACHE = load_existing_playlist()
 
 def is_link_alive(url):
     try:
-        # Pinging the M3U8 without a proxy saves bandwidth
         headers = {'User-Agent': 'Mozilla/5.0'}
         r = requests.head(url, headers=headers, timeout=5)
         return r.status_code == 200
     except:
         return False
 
+# --- NATIVE PYTHON EXTRACTOR ---
 def run_extractor(channel_url, proxy_to_use):
-    command = [
-        "yt-dlp", 
-        "--socket-timeout", "12", 
-        "--cookies", "cookies.txt", 
-        # --- THE CONSOLE SPOOF ---
-        # 1. Tell YouTube we are using a TV-based app (Cobalt)
-        "--extractor-args", "youtube:client=tv", 
-        # 2. Force the exact HTTP signature of an Xbox Series X
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edge/44.18363.8131",
-        "-J"
-    ]
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'simulate': True,
+        'cookiefile': 'cookies.txt', 
+        'extractor_args': {'youtube': {'client': ['tv']}} 
+    }
     
     if proxy_to_use:
-        command.extend(["--proxy", proxy_to_use])
-    command.append(channel_url)
-    
-    return subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
+        ydl_opts['proxy'] = proxy_to_use
+        
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            return ydl.extract_info(channel_url, download=False)
+    except Exception as e:
+        # This will now print the exact error to your Action logs if it crashes
+        print(f"      -> Internal extraction error: {str(e)}")
+        return None
 
 def process_channel(channel):
     print(f"Started: {channel['id']}")
@@ -143,16 +141,16 @@ def process_channel(channel):
                 result = run_extractor(channel['url'], proxy)
                 if result:
                     break 
-            except Exception as e:
+            except Exception:
                 print(f"  -> Route failed. Moving to next...")
                 result = None
 
     # 3. Process Data
     try:
         if result:
-            video_data = json.loads(result.stdout.strip())
-            channel_name = video_data.get("uploader", "Unknown Channel")
-            m3u8_url = video_data.get("manifest_url") or video_data.get("url")
+            channel_name = result.get("uploader", "Unknown Channel")
+            # Using native yt_dlp dictionary keys
+            m3u8_url = result.get("manifest_url") or result.get("url")
             if m3u8_url:
                 print(f"  -> Fetched fresh token: {channel_name} 🟢")
                 return f'#EXTINF:-1 tvg-id="{channel["id"]}" tvg-logo="{channel["logo"]}" group-title="{channel["group"]}", {channel_name}\n{m3u8_url}\n\n'
@@ -181,7 +179,6 @@ def update_playlist():
     print(f"Spawning Smart Extractors with {len(PROXIES)-1} active proxies...")
     extracted_links = []
     
-    # Running 4 parallel workers for optimal speed + Webshare safety
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = executor.map(process_channel, CHANNELS)
         for res in results:
