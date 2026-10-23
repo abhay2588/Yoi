@@ -151,3 +151,19 @@ https://dck1-ak-livedazn.akamaized.net/out/v1/814bffb9b389f652/e1f3582cdf2a4b4fb
 #EXTHTTP:{"cookie":"hdntl=exp=1787478357~acl=%2f*~id=6470ebb6adcfaaf41162265391699252~data=hdntl~hmac=e7d1c501a4a235d1a18889c8b5179ef42446c2f0c82657fe0f06b8dbdbfc2b36", "user-agent":"Hotstar;in.startv.hotstar/25.02.24.8.11169@sachinrtx (Android/15)", "referer":"https://www.hotstar.com/", "origin":"https://www.hotstar.com"}
 https://livetv.hotstar.com/mp1/gec-india-1540068723/bf078703201f419b89e87fedda08b8f1/index.mpd?a=ns&ttl=86400&hdnea=exp=1787478357~acl=%2f*~id=6470ebb6adcfaaf41162265391699252~data=hdntl~hmac=e7d1c501a4a235d1a18889c8b5179ef42446c2f0c82657fe0f06b8dbdbfc2b36
 
+#EXTINF:-1 tvg-id="1373" tvg-name="Disney" tvg-
+logo="https://img.media.jio.com/tvpimages/1/35/302071_1753185242621_l_medium.jpg" group-
+title="Kids",Disney
+#KODIPROP:inputstream=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=bb388508e8115e99a9d47adc9ff75a05:a1f994be722f6276
+2ae54b31e54e9aa0,b9b687a7c29b51a397012e44db459008:90e01b578e0fc3630f4aacfb9d4220e1,a5cf424e1
+c4259be9f2e336797d4cd91:bcdb2801f5d0d0293e0700d0dfe3c8fc,8dfc8dae041853e2ba021f0c4f014dc8:e1
+a8c6087493ea0045297d1a4177984c,3c78887036795a119afaab68e94818d5:d8f94f0f7d26f50348e0b04ed2d0
+1088
+https://jiotvpllive.cdn.jio.com/bpk-tv/Disney_Channel_BTS/WDVLive/index.mpd?
+__hdnea__=st=1792770336~exp=1792791936~acl=/bpk-
+tv/Disney_Channel_BTS/WDVLive/*~hmac=f7b6a25c3d1a007f94d6cdb1137bd09ff5179a2de17724af46f21d9
+1a3351cfc
+
